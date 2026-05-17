@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horizons — AI Travel Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/frontend/static/styles.css">
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">Hori<span>zons</span></a>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#destinations">Destinations</a>
+    <a href="#planner">AI Planner</a>
+    <a href="#itinerary">Itineraries</a>
+    <a href="#planner" class="nav-cta">Start Planning</a>
+  </div>
+  <button class="nav-hamburger" id="menuBtn" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" onclick="toggleMenu()">✕</button>
+  <a href="#how" onclick="toggleMenu()">How It Works</a>
+  <a href="#destinations" onclick="toggleMenu()">Destinations</a>
+  <a href="#planner" onclick="toggleMenu()">AI Planner</a>
+  <a href="#itinerary" onclick="toggleMenu()">Itineraries</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">AI-Powered Travel Intelligence</div>
+    <h1 class="hero-title">
+      Travel beyond<br>the <em>ordinary.</em>
+    </h1>
+    <p class="hero-subtitle">
+      Tell us your dream destination. Our AI crafts a bespoke itinerary — complete with hidden gems, local experiences, and seamless logistics — in seconds.
+    </p>
+    <div class="hero-planner">
+      <div class="planner-label">✦ Where would you like to go?</div>
+      <div class="planner-input-row">
+        <input class="planner-input" id="heroInput" type="text" placeholder="e.g. 7 days in Kyoto with a focus on temples and food…">
+        <button class="planner-btn" onclick="startHeroChat()">Plan Now</button>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem; display:flex; gap:1.5rem; flex-wrap:wrap; opacity:0; animation: fadeUp 1s 1s forwards;">
+      <span style="font-size:0.75rem; color:var(--mist);">✦ No signup required</span>
+      <span style="font-size:0.75rem; color:var(--mist);">✦ Instant results</span>
+      <span style="font-size:0.75rem; color:var(--mist);">✦ Fully customizable</span>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll to explore
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat reveal">
+    <div class="stat-num">190+</div>
+    <div class="stat-label">Countries Covered</div>
+  </div>
+  <div class="stat reveal" style="transition-delay:0.1s">
+    <div class="stat-num">50K+</div>
+    <div class="stat-label">Itineraries Created</div>
+  </div>
+  <div class="stat reveal" style="transition-delay:0.2s">
+    <div class="stat-num">4.9★</div>
+    <div class="stat-label">Average Rating</div>
+  </div>
+  <div class="stat reveal" style="transition-delay:0.3s">
+    <div class="stat-num">2s</div>
+    <div class="stat-label">Average Plan Time</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-eyebrow reveal">The Process</div>
+  <h2 class="section-title reveal">Travel planning,<br><em>reimagined</em></h2>
+  <div class="how-grid">
+    <div class="how-step reveal">
+      <div class="how-num">01</div>
+      <div class="how-title">Describe Your Dream</div>
+      <p class="how-desc">Tell our AI your destination, dates, interests, and travel style in plain language. No forms, no menus — just a conversation.</p>
+    </div>
+    <div class="how-step reveal" style="transition-delay:0.15s">
+      <div class="how-num">02</div>
+      <div class="how-title">AI Crafts Your Plan</div>
+      <p class="how-desc">Within seconds, Horizons generates a full itinerary with day-by-day activities, restaurant picks, transport tips, and local insights.</p>
+    </div>
+    <div class="how-step reveal" style="transition-delay:0.3s">
+      <div class="how-num">03</div>
+      <div class="how-title">Refine & Personalize</div>
+      <p class="how-desc">Chat with the AI to tweak any detail. Swap activities, adjust pacing, add must-sees, or request alternatives in real time.</p>
+    </div>
+    <div class="how-step reveal" style="transition-delay:0.45s">
+      <div class="how-num">04</div>
+      <div class="how-title">Pack & Depart</div>
+      <p class="how-desc">Export your finalized itinerary as a PDF, share with travel companions, and head off with confidence. Bon voyage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AI PLANNER SECTION -->
+<section id="planner">
+  <div class="section-eyebrow reveal">AI Concierge</div>
+  <h2 class="section-title reveal">Your intelligent<br><em>travel companion</em></h2>
+  <div class="planner-layout">
+    <!-- CHAT -->
+    <div class="chat-container reveal-left">
+      <div class="chat-header">
+        <div class="chat-dot green"></div>
+        <div>
+          <div class="chat-header-title">Horizons AI</div>
+          <div class="chat-header-sub">Travel Concierge · Online</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg ai">
+          <div class="msg-label">Horizons AI</div>
+          <div class="msg-bubble">Welcome to Horizons ✦ I'm your personal AI travel concierge. Tell me about your dream trip — destination, duration, interests, budget — and I'll craft a bespoke itinerary just for you. Where shall we go?</div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input class="chat-input" id="chatInput" type="text" placeholder="Describe your ideal trip…" onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="chat-send" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="planner-features reveal-right">
+      <div style="margin-bottom:2rem;">
+        <div class="badge" style="margin-bottom:1rem;"><span class="badge-dot"></span> Powered by Claude AI</div>
+        <p style="font-size:0.9rem; color:var(--mist); line-height:1.7;">Our AI draws on vast travel knowledge, real traveler insights, and local expertise to build plans that feel hand-crafted — not algorithmic.</p>
+      </div>
+      <div class="pf-item">
+        <div class="pf-icon">🌍</div>
+        <div>
+          <div class="pf-title">Global Destination Intelligence</div>
+          <p class="pf-desc">Deep knowledge of 190+ countries — from Paris cafés to off-grid Patagonian treks.</p>
+        </div>
+      </div>
+      <div class="pf-item">
+        <div class="pf-icon">⏱</div>
+        <div>
+          <div class="pf-title">Smart Pacing & Logistics</div>
+          <p class="pf-desc">Optimized daily schedules that balance sightseeing, rest, and travel time — no more exhausting over-itineraries.</p>
+        </div>
+      </div>
+      <div class="pf-item">
+        <div class="pf-icon">🍽</div>
+        <div>
+          <div class="pf-title">Curated Local Dining</div>
+          <p class="pf-desc">Authentic restaurant recommendations matched to your taste — from street food to Michelin stars.</p>
+        </div>
+      </div>
+      <div class="pf-item">
+        <div class="pf-icon">💬</div>
+        <div>
+          <div class="pf-title">Conversational Refinement</div>
+          <p class="pf-desc">Keep chatting to adjust any detail. The AI remembers your preferences and refines in real time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DESTINATIONS -->
+<section id="destinations">
+  <div class="dest-header">
+    <div>
+      <div class="section-eyebrow reveal">Explore</div>
+      <h2 class="section-title reveal">Popular <em>destinations</em></h2>
+    </div>
+    <div class="dest-filter reveal">
+      <button class="filter-btn active" onclick="filterDest(this, 'all')">All</button>
+      <button class="filter-btn" onclick="filterDest(this, 'asia')">Asia</button>
+      <button class="filter-btn" onclick="filterDest(this, 'europe')">Europe</button>
+      <button class="filter-btn" onclick="filterDest(this, 'americas')">Americas</button>
+    </div>
+  </div>
+  <div class="dest-grid" id="destGrid">
+    <div class="dest-card reveal-left" data-region="asia">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80" alt="Kyoto">
+      <div class="dest-overlay">
+        <div class="dest-tag">Asia · Japan</div>
+        <div class="dest-name">Kyoto</div>
+        <div class="dest-meta"><span>🌸 Spring · Autumn</span><span>7–10 days</span></div>
+        <button class="dest-plan-btn" onclick="planDest('Kyoto, Japan')">Plan this trip →</button>
+      </div>
+    </div>
+    <div class="dest-card reveal" data-region="europe" style="transition-delay:0.1s">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=600&q=80" alt="Paris">
+      <div class="dest-overlay">
+        <div class="dest-tag">Europe · France</div>
+        <div class="dest-name">Paris</div>
+        <div class="dest-meta"><span>🥐 Year-round</span><span>4–7 days</span></div>
+        <button class="dest-plan-btn" onclick="planDest('Paris, France')">Plan this trip →</button>
+      </div>
+    </div>
+    <div class="dest-card reveal" data-region="americas" style="transition-delay:0.2s">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&q=80" alt="Rio">
+      <div class="dest-overlay">
+        <div class="dest-tag">Americas · Brazil</div>
+        <div class="dest-name">Rio de Janeiro</div>
+        <div class="dest-meta"><span>☀️ Summer</span><span>5–8 days</span></div>
+        <button class="dest-plan-btn" onclick="planDest('Rio de Janeiro, Brazil')">Plan this trip →</button>
+      </div>
+    </div>
+    <div class="dest-card reveal" data-region="asia" style="transition-delay:0.15s">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80" alt="Bali">
+      <div class="dest-overlay">
+        <div class="dest-tag">Asia · Indonesia</div>
+        <div class="dest-name">Bali</div>
+        <div class="dest-meta"><span>🌴 Dry season</span><span>7–14 days</span></div>
+        <button class="dest-plan-btn" onclick="planDest('Bali, Indonesia')">Plan this trip →</button>
+      </div>
+    </div>
+    <div class="dest-card reveal" data-region="europe" style="transition-delay:0.3s">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=600&q=80" alt="Santorini">
+      <div class="dest-overlay">
+        <div class="dest-tag">Europe · Greece</div>
+        <div class="dest-name">Santorini</div>
+        <div class="dest-meta"><span>🌊 Summer</span><span>4–6 days</span></div>
+        <button class="dest-plan-btn" onclick="planDest('Santorini, Greece')">Plan this trip →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ITINERARY PREVIEW -->
+<section id="itinerary">
+  <div class="itin-layout">
+    <div class="itin-left">
+      <div class="section-eyebrow reveal">Sample Output</div>
+      <h2 class="section-title reveal">What your<br><em>itinerary</em> looks like</h2>
+      <p class="itin-desc reveal">Every plan includes day-by-day scheduling, curated activities, dining picks, and local tips — all tailored to your travel style.</p>
+      <div class="itin-sample reveal">
+        <div class="itin-sample-title">✦ 5 Days in Kyoto, Japan</div>
+        <div class="itin-day">
+          <div class="itin-day-num">Day 01</div>
+          <div class="itin-day-title">Arrival & Higashiyama</div>
+          <div class="itin-activities">
+            <div class="itin-act"><div class="itin-time">14:00</div>Check in to ryokan in Gion district</div>
+            <div class="itin-act"><div class="itin-time">16:00</div>Stroll Ninenzaka & Sannenzaka cobblestone lanes</div>
+            <div class="itin-act"><div class="itin-time">18:30</div>Kaiseki dinner at Nakamura-ro (850 years old)</div>
+          </div>
+        </div>
+        <div class="itin-day">
+          <div class="itin-day-num">Day 02</div>
+          <div class="itin-day-title">Arashiyama & Bamboo</div>
+          <div class="itin-activities">
+            <div class="itin-act"><div class="itin-time">07:30</div>Bamboo Grove before crowds arrive</div>
+            <div class="itin-act"><div class="itin-time">09:00</div>Tenryu-ji Zen garden & tea ceremony</div>
+            <div class="itin-act"><div class="itin-time">12:00</div>Tofu cuisine lunch by the river</div>
+          </div>
+        </div>
+        <div class="itin-day">
+          <div class="itin-day-num">Day 03</div>
+          <div class="itin-day-title">Fushimi Inari & Nishiki</div>
+          <div class="itin-activities">
+            <div class="itin-act"><div class="itin-time">06:00</div>Hike Fushimi Inari at sunrise</div>
+            <div class="itin-act"><div class="itin-time">11:00</div>Nishiki Market food tour with guide</div>
+            <div class="itin-act"><div class="itin-time">15:00</div>Matcha workshop in Uji</div>
+          </div>
+        </div>
+      </div>
+      <div class="itin-tags reveal">
+        <span class="itin-tag active">Culture</span>
+        <span class="itin-tag active">Food</span>
+        <span class="itin-tag">Adventure</span>
+        <span class="itin-tag active">History</span>
+        <span class="itin-tag">Nightlife</span>
+        <span class="itin-tag active">Nature</span>
+        <span class="itin-tag">Luxury</span>
+        <span class="itin-tag">Budget</span>
+      </div>
+    </div>
+    <div class="itin-right">
+      <div class="itin-map-placeholder reveal-right">
+        <div class="map-bg"></div>
+        <div class="map-label">
+          <span class="map-pin">📍</span>
+          Interactive map preview<br>
+          <span style="font-size:0.85rem; font-family:'DM Sans',sans-serif;">Generated with each itinerary</span>
+        </div>
+      </div>
+      <div style="margin-top:2rem; padding:1.5rem; border:1px solid rgba(201,169,110,0.15); border-radius:3px;" class="reveal-right" style="transition-delay:0.2s">
+        <div style="font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:1rem;">Trip Summary</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div>
+            <div style="font-size:0.72rem; color:var(--mist); margin-bottom:0.25rem;">Duration</div>
+            <div style="font-size:0.95rem; font-weight:500;">5 days</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem; color:var(--mist); margin-bottom:0.25rem;">Activities</div>
+            <div style="font-size:0.95rem; font-weight:500;">18 places</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem; color:var(--mist); margin-bottom:0.25rem;">Est. Budget</div>
+            <div style="font-size:0.95rem; font-weight:500;">¥120,000–180,000</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem; color:var(--mist); margin-bottom:0.25rem;">Best Season</div>
+            <div style="font-size:0.95rem; font-weight:500;">Mar–May, Oct–Nov</div>
+          </div>
+        </div>
+        <button onclick="document.getElementById('chatInput').focus(); document.getElementById('planner').scrollIntoView({behavior:'smooth'})" style="width:100%; margin-top:1.5rem; padding:0.85rem; background:transparent; border:1px solid var(--gold); color:var(--gold); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; transition:background 0.3s; border-radius:1px;" onmouseover="this.style.background='rgba(201,169,110,0.12)'" onmouseout="this.style.background='transparent'">
+          Plan My Own Trip →
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div style="text-align:center; margin-bottom:1rem;">
+    <div class="section-eyebrow reveal" style="justify-content:center; text-align:center;">After using Horizons</div>
+    <h2 class="section-title reveal" style="text-align:center;">Travelers <em>love us</em></h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card reveal" style="transition-delay:0s">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-quote">"</div>
+      <p class="testi-text">The AI suggested a tiny family-run restaurant in Hoi An that wasn't on any travel blog. Best meal of my life. I never would have found it on my own.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">SM</div>
+        <div>
+          <div class="testi-name">Sarah M.</div>
+          <div class="testi-trip">10 days in Vietnam</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card reveal" style="transition-delay:0.15s">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-quote">"</div>
+      <p class="testi-text">I described my travel style in one paragraph and it built me a perfect two-week Andalusia itinerary. Every single day was exactly right — not too rushed, not too slow.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">JR</div>
+        <div>
+          <div class="testi-name">James R.</div>
+          <div class="testi-trip">14 days in Spain</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card reveal" style="transition-delay:0.3s">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-quote">"</div>
+      <p class="testi-text">Used it for a solo trip to Tokyo. The AI even told me which metro lines to avoid during rush hour and where to find the best ramen at 2am. It's like having a local friend.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">AK</div>
+        <div>
+          <div class="testi-name">Anika K.</div>
+          <div class="testi-trip">12 days in Japan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-bg"></div>
+  <div class="cta-content">
+    <div class="section-eyebrow reveal" style="justify-content:center;">Begin your journey</div>
+    <h2 class="cta-title reveal">Your next adventure<br><em>awaits.</em></h2>
+    <p class="cta-subtitle reveal">Start planning in seconds. No signup required. Just tell us where you want to go.</p>
+    <div class="cta-buttons reveal">
+      <button class="btn-primary" onclick="document.getElementById('chatInput').focus(); document.getElementById('planner').scrollIntoView({behavior:'smooth'})">
+        Start Planning Free
+      </button>
+      <button class="btn-secondary" onclick="document.getElementById('destinations').scrollIntoView({behavior:'smooth'})">
+        Explore Destinations
+      </button>
+    </div>
+    <div style="margin-top:3rem; display:flex; justify-content:center; gap:3rem; flex-wrap:wrap;" class="reveal">
+      <div style="text-align:center;">
+        <div style="font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--gold);">Free</div>
+        <div style="font-size:0.72rem; color:var(--mist); letter-spacing:0.1em; text-transform:uppercase; margin-top:0.25rem;">To start</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--gold);">∞</div>
+        <div style="font-size:0.72rem; color:var(--mist); letter-spacing:0.1em; text-transform:uppercase; margin-top:0.25rem;">Destinations</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--gold);">24/7</div>
+        <div style="font-size:0.72rem; color:var(--mist); letter-spacing:0.1em; text-transform:uppercase; margin-top:0.25rem;">AI Support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo">Hori<span>zons</span></div>
+      <p class="footer-tagline">AI-powered travel planning for the curious and the bold. Every trip, perfectly crafted.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Explore</div>
+      <div class="footer-links">
+        <a href="#destinations">Destinations</a>
+        <a href="#planner">AI Planner</a>
+        <a href="#how">How It Works</a>
+        <a href="#itinerary">Sample Itineraries</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Company</div>
+      <div class="footer-links">
+        <a href="#">About Us</a>
+        <a href="#">Blog</a>
+        <a href="#">Press</a>
+        <a href="#">Careers</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Support</div>
+      <div class="footer-links">
+        <a href="#">Help Center</a>
+        <a href="#">Contact</a>
+        <a href="#">Community</a>
+        <a href="#">API Docs</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 Horizons AI. All rights reserved.</div>
+    <div class="footer-legal">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Cookies</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // CURSOR
+  const cursor = document.getElementById('cursor');
+  const cursorRing = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0;
+  let ringX = 0, ringY = 0;
+  if (cursor && cursorRing) {
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      cursor.style.left = mouseX + 'px';
+      cursor.style.top = mouseY + 'px';
+    });
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      cursorRing.style.left = ringX + 'px';
+      cursorRing.style.top = ringY + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+    document.querySelectorAll('a, button, input').forEach(el => {
+      el.addEventListener('mouseenter', () => { cursor.classList.add('hovered'); cursorRing.classList.add('hovered'); });
+      el.addEventListener('mouseleave', () => { cursor.classList.remove('hovered'); cursorRing.classList.remove('hovered'); });
+    });
+  }
+
+  // NAV SCROLL
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // SCROLL REVEAL
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+
+  // MOBILE MENU
+  window.toggleMenu = function () {
+    const menu = document.getElementById('mobileMenu');
+    if (menu) menu.classList.toggle('open');
+  };
+
+  // DESTINATION FILTER
+  window.filterDest = function (btn, region) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.dest-card').forEach(card => {
+      if (region === 'all' || card.dataset.region === region) {
+        card.style.opacity = '1'; card.style.pointerEvents = 'auto';
+      } else {
+        card.style.opacity = '0.25'; card.style.pointerEvents = 'none';
+      }
+    });
+  };
+
+  // PLAN FROM DESTINATION CARD
+  window.planDest = function (dest) {
+    const chatInput = document.getElementById('chatInput');
+    const planner = document.getElementById('planner');
+    if (chatInput && planner) {
+      chatInput.value = `Plan a trip to ${dest} for me`;
+      planner.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => chatInput.focus(), 600);
+    }
+  };
+
+  // HERO INPUT → CHAT
+  function startHeroChat() {
+    const heroInput = document.getElementById('heroInput');
+    const chatInput = document.getElementById('chatInput');
+    const planner = document.getElementById('planner');
+    if (!heroInput || !chatInput || !planner) return;
+    const val = heroInput.value.trim();
+    if (!val) return;
+    chatInput.value = val;
+    planner.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => sendMessage(), 800);
+  }
+  window.startHeroChat = startHeroChat;
+  const heroInput = document.getElementById('heroInput');
+  if (heroInput) {
+    heroInput.addEventListener('keydown', e => { if (e.key === 'Enter') startHeroChat(); });
+  }
+
+  // AI CHAT
+  const BACKEND_BASE_URL = 'http://localhost:5000';
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const conversationHistory = [];
+
+  function appendMsg(role, text) {
+    if (!chatMessages) return;
+    const wrap = document.createElement('div');
+    wrap.className = `msg ${role}`;
+    const label = document.createElement('div');
+    label.className = 'msg-label';
+    label.textContent = role === 'user' ? 'You' : 'Horizons AI';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.style.whiteSpace = 'pre-wrap';
+    // Use formatMsg for AI messages
+    if (role === 'ai') {
+      bubble.innerHTML = formatMsg(text);
+    } else {
+      bubble.textContent = text;
+    }
+    wrap.appendChild(label);
+    wrap.appendChild(bubble);
+    chatMessages.appendChild(wrap);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return wrap;
+  }
+
+  function appendTyping() {
+    if (!chatMessages) return null;
+    const typingWrap = document.createElement('div');
+    typingWrap.className = 'msg ai';
+    const label = document.createElement('div');
+    label.className = 'msg-label';
+    label.textContent = 'Horizons AI';
+    const typing = document.createElement('div');
+    typing.className = 'typing-indicator';
+    typing.innerHTML = `
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    `;
+    typingWrap.appendChild(label);
+    typingWrap.appendChild(typing);
+    chatMessages.appendChild(typingWrap);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return typingWrap;
+  }
+
+  async function sendMessage() {
+    if (!chatInput || !sendBtn) return;
+    const text = chatInput.value.trim();
+    if (!text) return;
+    appendMsg('user', text);
+    chatInput.value = '';
+    sendBtn.disabled = true;
+    conversationHistory.push({ role: 'user', content: text });
+    const typingEl = appendTyping();
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/travel-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: text,
+          history: conversationHistory.slice(-12)
+        })
+      });
+      const data = await response.json();
+      if (typingEl) typingEl.remove();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Backend request failed');
+      }
+      const reply =
+        data?.data?.plan ||
+        "I'd love to help plan that trip. Share your destination, number of days, budget, and vibe.";
+      appendMsg('ai', reply);
+      conversationHistory.push({ role: 'assistant', content: reply });
+    } catch (error) {
+      if (typingEl) typingEl.remove();
+      appendMsg(
+        'ai',
+        "✦ I’m ready to help plan your trip, but I couldn’t reach the backend just now.\n\nPlease make sure your Express server is running on http://localhost:5000, then try again."
+      );
+      console.error('Chat error:', error);
+    } finally {
+      sendBtn.disabled = false;
+      chatInput.focus();
+      if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  }
+
+  function formatMsg(text) {
+    return text
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/✦/g, '<span style="color:var(--gold)">✦</span>');
+  }
+  window.sendMessage = sendMessage;
+
+  // Quick prompt suggestions
+  const suggestions = [
+    "7 days in Tokyo, I love food and hidden spots",
+    "Romantic week in Paris under €2000",
+    "Adventure trip to Patagonia in November",
+    "Cultural tour of Morocco for 10 days"
+  ];
+  const suggestionsEl = document.createElement('div');
+  suggestionsEl.style.cssText = 'padding:0.75rem 1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01);';
+  suggestions.forEach(s => {
+    const chip = document.createElement('button');
+    chip.textContent = s;
+    chip.style.cssText = 'padding:0.3rem 0.75rem; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:var(--mist); font-family:DM Sans,sans-serif; font-size:0.7rem; cursor:pointer; border-radius:20px; transition:all 0.2s; white-space:nowrap;';
+    chip.onmouseover = () => { chip.style.borderColor = 'rgba(201,169,110,0.4)'; chip.style.color = 'var(--gold)'; };
+    chip.onmouseout = () => { chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'var(--mist)'; };
+    chip.onclick = () => { if (chatInput) { chatInput.value = s; chatInput.focus(); } };
+    suggestionsEl.appendChild(chip);
+  });
+  const chatContainer = document.querySelector('.chat-container');
+  if (chatContainer) {
+    const inputArea = chatContainer.querySelector('.chat-input-area');
+    if (inputArea) chatContainer.insertBefore(suggestionsEl, inputArea);
+  }
+});
+</script>
+</body>
+</html>
