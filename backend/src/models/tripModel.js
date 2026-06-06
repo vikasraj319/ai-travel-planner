@@ -1,8 +1,23 @@
 
- function validateTrip(data) {
-  if (!data.destination) throw new Error("Destination is required")
-  if (!data.budget || data.budget <= 0) throw new Error("Invalid budget")
-  if (!data.days || data.days <= 0) throw new Error("Invalid days")
+ function validateTrip(trip) {
+
+  // Auto fallback budget
+  if (
+    trip.budget === undefined ||
+    trip.budget === null ||
+    trip.budget === ""
+  ) {
+    trip.budget = 0;
+  }
+
+  // Convert string → number
+  trip.budget = Number(trip.budget);
+
+  // Final validation
+  if (isNaN(trip.budget)) {
+    throw new Error("Invalid budget");
+  }
+
 }
 
 function createTripModel(data) {

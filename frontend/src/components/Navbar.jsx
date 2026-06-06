@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user } = useAuth();
 
   function toggleMenu() {
     setMenuOpen(prev => !prev);
@@ -32,7 +35,18 @@ export default function Navbar() {
           <a href="#destinations">Destinations</a>
           <a href="#planner">AI Planner</a>
           <a href="#itinerary">Itineraries</a>
-          <a href="#planner" className="nav-cta">Start Planning</a>
+          {user ? (
+            <Link to="/dashboard" className="nav-cta">
+              My Dashboard
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="nav-cta"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         <button className="nav-hamburger" onClick={toggleMenu}>
@@ -48,6 +62,26 @@ export default function Navbar() {
         <a href="#destinations" onClick={toggleMenu}>Destinations</a>
         <a href="#planner" onClick={toggleMenu}>AI Planner</a>
         <a href="#itinerary" onClick={toggleMenu}>Itineraries</a>
+        {user ? (
+
+          <Link
+            to="/dashboard"
+            className="mobile-auth-btn"
+            onClick={toggleMenu}
+          >
+            Dashboard
+          </Link>
+
+        ) : (
+
+          <Link
+            to="/login"
+            className="mobile-auth-btn"
+            onClick={toggleMenu}
+          >
+            Sign In
+          </Link>
+     )}
       </div>
     </>
   );

@@ -56,13 +56,17 @@ const Planner = forwardRef(({ onResult }, ref) => {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ prompt: text })
+        body: JSON.stringify({
+        prompt: text
+      })
       });
 
-      const data = await res.json();
-      console.log("FULL RESPONSE:", data);
+const data = await res.json();
 
-const parsed = data?.data?.plan;
+console.log("FULL RESPONSE:", data);
+
+// Backend now returns plan directly
+const parsed = data?.plan;
 
 if (!parsed) {
   throw new Error("No itinerary returned from server");
@@ -70,20 +74,7 @@ if (!parsed) {
 
 console.log("PARSED:", parsed);
 
-// 🚨 If backend returned fallback string
-if (typeof parsed !== "object") {
-
-  setMessages(prev => [
-    ...prev,
-    {
-      role: "ai",
-      text: parsed
-    }
-  ]);
-
-  return;
-}
-
+// ONLY show short message in chat
 setMessages(prev => [
   ...prev,
   {
@@ -92,7 +83,7 @@ setMessages(prev => [
   }
 ]);
 
-onResult?.(parsed);
+// Send FULL itinerary to itinerary section
 
 onResult?.(parsed);
     } catch (err) {

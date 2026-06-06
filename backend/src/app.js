@@ -7,9 +7,11 @@ const { saveTrip } = require('./services/travelService');
 const corsOptions = require('./config/corsOptions');
 const healthRoutes = require('./routes/healthRoutes');
 const travelRoutes = require('./routes/travelRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 const requestLogger = require('./middleware/requestLogger');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
+
 
 const app = express();
 
@@ -62,7 +64,7 @@ app.post('/api/save-trip', async (req, res) => {
 
 app.use('/api', healthRoutes);
 app.use('/api', travelRoutes);
-
+app.use('/api', profileRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -41,7 +43,8 @@
     pointer-events: none; z-index: 9999;
     transform: translate(-50%, -50%);
     transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background 0.3s ease;
-    mix-blend-mode: difference;
+    /* mix-blend-mode: difference; */
+    z-index: 9999 !important;
   }
   .cursor-ring {
     position: fixed; width: 36px; height: 36px;
@@ -49,6 +52,7 @@
     pointer-events: none; z-index: 9998;
     transform: translate(-50%, -50%);
     transition: transform 0.15s ease, width 0.3s ease, height 0.3s ease;
+    z-index: 9998 !important;
   }
   .cursor.hovered { width: 6px; height: 6px; background: var(--gold2); }
   .cursor-ring.hovered { width: 50px; height: 50px; border-color: var(--gold); }
@@ -878,3 +882,959 @@
     color: var(--gold); background: rgba(201,169,110,0.05);
   }
   .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+
+  /* =========================
+   LOGIN PAGE
+========================= */
+
+.login-page {
+  min-height: 100vh;
+  background: var(--ink);
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 5rem 2rem;
+  overflow: hidden;
+
+  position: relative;
+  isolation: isolate;
+
+}
+
+/* Background Glow */
+.login-page::before {
+  content: '';
+  z-index: 1;
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(201,169,110,0.08),
+      transparent 35%
+    );
+
+  pointer-events: none;
+}
+
+/* Background Grid */
+.login-page::after {
+  content: '';
+  z-index: 1; 
+
+  position: absolute;
+  inset: 0;
+
+  opacity: 0.03;
+
+  background-image:
+    linear-gradient(
+      rgba(201,169,110,0.4) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(201,169,110,0.4) 1px,
+      transparent 1px
+    );
+
+  background-size: 60px 60px;
+
+  pointer-events: none;
+}
+
+/* =========================
+   LOGIN CARD
+========================= */
+
+.login-card {
+  position: relative;
+  z-index: 10;
+
+  width: 100%;
+  max-width: 440px;
+
+  padding: 1.5em 1.8rem;
+
+  background: rgba(255,255,255,0.03);
+
+  border: 1px solid rgba(201,169,110,0.15);
+
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.4);
+     transition:
+    border-color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.login-card:hover {
+  border-color: rgba(201,169,110,0.28);
+
+  transform: translateY(-2px);
+}
+/* =========================
+   HEADER
+========================= */
+
+.login-header {
+  text-align: center;
+
+  margin-bottom: 1.4rem;
+}
+
+.login-eyebrow {
+  font-size: 0.7rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.35em;
+
+  color: var(--gold);
+
+  margin-bottom: 2rem;
+}
+
+.login-title {
+  font-family: 'Cormorant Garamond', serif;
+
+  font-size: clamp(2.3rem, 5vw, 3.5rem);
+
+  font-weight: 300;
+
+  line-height: 1;
+}
+
+.login-title em {
+  font-style: italic;
+
+  color: var(--gold);
+}
+
+.login-subtitle {
+  max-width: 520px;
+
+  margin: 1rem auto 0;
+
+  color: var(--mist);
+
+  line-height: 1.7;
+
+  font-size: 0.9rem;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1.2rem;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.form-label {
+  font-size: 0.62rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.25em;
+
+  color: var(--gold);
+
+  margin-bottom: 0.7rem;
+}
+
+/* Inputs */
+.form-input {
+  background: transparent;
+
+  border: none;
+  border-bottom: 1px solid rgba(201,169,110,0.2);
+
+  padding-bottom: 0.8rem;
+
+  font-size: 0.8rem;
+
+  color: var(--white);
+
+  outline: none;
+
+  transition:
+    border-color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.form-input::placeholder {
+  color: var(--mist);
+}
+
+.form-input:focus {
+  border-color: var(--gold);
+
+  transform: translateY(-2px);
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.login-btn {
+  margin-top: 1rem;
+
+  padding: 1.5rem;
+
+  background: transparent;
+
+  border: 1px solid var(--gold);
+
+  color: var(--gold);
+
+  font-size: 0.8rem;
+
+  letter-spacing: 0.25em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    background 0.4s ease,
+    color 0.4s ease,
+    transform 0.3s ease;
+}
+
+.login-btn:hover {
+  background: var(--gold);
+
+  color: var(--ink);
+
+  transform: translateY(-3px);
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.login-footer {
+  margin-top: 1rem;
+
+  text-align: center;
+}
+
+.login-footer p {
+  color: var(--mist);
+
+  font-size: 0.9rem;
+}
+
+.login-footer a {
+  display: inline-block;
+
+  margin-top: 1rem;
+
+  color: var(--gold);
+
+  text-decoration: none;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.18em;
+
+  font-size: 0.75rem;
+
+  transition: color 0.3s ease;
+}
+
+.login-footer a:hover {
+  color: var(--gold2);
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.login-error {
+  padding: 1rem 1.25rem;
+
+  border: 1px solid rgba(255,0,0,0.2);
+
+  background: rgba(255,0,0,0.08);
+
+  color: #ffb4b4;
+
+  font-size: 0.9rem;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width: 768px) {
+
+  .login-card {
+    padding: 1.5rem 2rem;
+  }
+
+  .login-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .login-title {
+    font-size: 2.5rem;
+  }
+
+  .login-form {
+    gap: 2rem;
+  }
+
+  .login-footer {
+    margin-top: 2rem;
+  }
+
+}
+
+/* =========================
+   DASHBOARD PAGE
+========================= */
+
+.dashboard-page {
+  min-height: 100vh;
+
+  background: var(--ink);
+
+  position: relative;
+
+  overflow-x: hidden;
+
+  padding: 3rem 2rem;
+}
+
+/* Background Glow */
+
+.dashboard-bg {
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(201,169,110,0.08),
+      transparent 35%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+
+.dashboard-container {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 1400px;
+
+  margin: 0 auto;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.dashboard-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 2rem;
+
+  margin-bottom: 4rem;
+}
+
+.dashboard-eyebrow {
+  font-size: 0.65rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.3em;
+
+  color: var(--gold);
+
+  margin-bottom: 1rem;
+}
+
+.dashboard-title {
+  font-family: 'Cormorant Garamond', serif;
+
+  font-size: clamp(2.8rem, 6vw, 5rem);
+
+  font-weight: 300;
+
+  line-height: 1;
+}
+
+.dashboard-title em {
+  color: var(--gold);
+
+  font-style: italic;
+}
+
+.dashboard-subtitle {
+  margin-top: 1.5rem;
+
+  max-width: 520px;
+
+  color: var(--mist);
+
+  line-height: 1.8;
+
+  font-size: 0.95rem;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.dashboard-btn {
+  background: transparent;
+
+  border: 1px solid var(--gold);
+
+  color: var(--gold);
+
+  padding: 0.9rem 1.5rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.18em;
+
+  font-size: 0.7rem;
+
+  cursor: pointer;
+
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.dashboard-btn:hover {
+  background: var(--gold);
+
+  color: var(--ink);
+
+  transform: translateY(-2px);
+}
+
+/* =========================
+   GRID
+========================= */
+
+.dashboard-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(260px, 1fr));
+
+  gap: 1.5rem;
+
+  margin-bottom: 3rem;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.dashboard-card {
+  background:
+    rgba(255,255,255,0.03);
+
+  border:
+    1px solid rgba(201,169,110,0.15);
+
+  padding: 2rem;
+  cursor: pointer;
+
+  backdrop-filter: blur(18px);
+
+  transition:
+    border-color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.dashboard-card:hover {
+  border-color:
+    rgba(201,169,110,0.3);
+
+  transform: translateY(-4px);
+}
+
+.card-label {
+  font-size: 0.65rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.25em;
+
+  color: var(--gold);
+
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-family:
+    'Cormorant Garamond', serif;
+
+  font-size: 2rem;
+
+  font-weight: 300;
+
+  margin-bottom: 1rem;
+}
+
+.card-text {
+  color: var(--mist);
+
+  line-height: 1.8;
+
+  font-size: 0.92rem;
+}
+
+/* =========================
+   INFO SECTION
+========================= */
+
+.dashboard-info {
+  background:
+    rgba(255,255,255,0.03);
+
+  border:
+    1px solid rgba(201,169,110,0.15);
+
+  padding: 2rem;
+
+  backdrop-filter: blur(18px);
+}
+
+.info-row {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 2rem;
+
+  padding: 1rem 0;
+
+  border-bottom:
+    1px solid rgba(201,169,110,0.08);
+
+  color: var(--mist);
+
+  font-size: 0.9rem;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+/* =========================
+  Profile SECTION
+========================= */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.profile-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 18px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-card-label {
+  color: var(--gold);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.profile-card input,
+.profile-card select,
+.profile-card textarea {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.profile-card textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.profile-wide {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================
+   SAVED TRIPS PAGE
+========================= */
+
+.saved-trips-page {
+
+  min-height: 100vh;
+
+  padding: 7rem 4rem;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(201,169,110,0.08),
+      transparent 35%
+    ),
+    #070b12;
+
+  color: white;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.saved-title {
+
+  font-size: 3.2rem;
+
+  font-family:
+    'Cormorant Garamond',
+    serif;
+
+  color: #d4b06a;
+
+  margin-bottom: 3rem;
+
+  letter-spacing: 0.03em;
+
+  text-shadow:
+    0 0 20px rgba(212,176,106,0.12);
+}
+
+/* =========================
+   GRID
+========================= */
+
+.saved-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(320px, 1fr));
+
+  gap: 2rem;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.saved-card {
+
+  position: relative;
+
+  padding: 2rem;
+
+  border-radius: 24px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18,22,35,0.96),
+      rgba(10,14,24,0.96)
+    );
+
+  border:
+    1px solid rgba(201,169,110,0.12);
+
+  backdrop-filter: blur(12px);
+
+  transition: 0.35s ease;
+
+  box-shadow:
+    0 12px 35px rgba(0,0,0,0.35);
+}
+
+.saved-card:hover {
+
+  transform:
+    translateY(-8px);
+
+  border-color:
+    rgba(201,169,110,0.28);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.55);
+}
+
+/* =========================
+   GOLD GLOW
+========================= */
+
+.saved-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  top: -120px;
+  right: -120px;
+
+  width: 240px;
+  height: 240px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(201,169,110,0.12),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================
+   LABEL
+========================= */
+
+.saved-label {
+
+  font-size: 0.72rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.18em;
+
+  color: rgba(212,176,106,0.7);
+
+  margin-bottom: 0.8rem;
+}
+
+/* =========================
+   DESTINATION TITLE
+========================= */
+
+.saved-card h2 {
+
+  font-size: 2rem;
+
+  font-family:
+    'Cormorant Garamond',
+    serif;
+
+  color: white;
+
+  margin-bottom: 1rem;
+}
+
+/* =========================
+   DETAILS
+========================= */
+
+.saved-card p {
+
+  color:
+    rgba(255,255,255,0.72);
+
+  line-height: 1.7;
+
+  font-size: 0.95rem;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.saved-card button {
+
+  margin-top: 1.8rem;
+
+  width: 100%;
+
+  padding: 1rem;
+
+  border-radius: 14px;
+
+  border:
+    1px solid rgba(201,169,110,0.2);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(201,169,110,0.18),
+      rgba(201,169,110,0.08)
+    );
+
+  color: #d4b06a;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.3s ease;
+}
+
+.saved-card button:hover {
+
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(201,169,110,0.4);
+
+  box-shadow:
+    0 10px 25px rgba(201,169,110,0.15);
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width: 768px) {
+
+  .saved-trips-page {
+
+    padding:
+      6rem 1.5rem;
+  }
+
+  .saved-title {
+
+    font-size: 2.4rem;
+  }
+
+}
+
+
+@keyframes profileFade {
+
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width: 768px) {
+
+  .dashboard-page {
+    padding: 2rem 1rem;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+  }
+
+  .dashboard-title {
+    font-size: 3rem;
+  }
+
+  .dashboard-card {
+    padding: 1.5rem;
+  }
+
+  .dashboard-info {
+    padding: 1.5rem;
+  }
+
+}
+
+/* =========================
+   MOBILE AUTH BUTTON
+========================= */
+
+.mobile-auth-btn {
+  margin-top: 2rem;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    0.9rem 1.4rem;
+
+  border:
+    1px solid rgba(201,169,110,0.18);
+
+  background:
+    rgba(255,255,255,0.03);
+
+  color: var(--gold);
+
+  text-decoration: none;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.18em;
+
+  font-size: 0.72rem;
+
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease,
+    transform 0.35s ease,
+    color 0.35s ease;
+}
+
+.mobile-auth-btn:hover {
+  background:
+    rgba(201,169,110,0.08);
+
+  border-color:
+    rgba(201,169,110,0.35);
+
+  color: var(--white);
+
+  transform: translateY(-2px);
+}

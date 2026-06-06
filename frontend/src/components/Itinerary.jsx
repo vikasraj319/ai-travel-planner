@@ -141,7 +141,7 @@ export default function Itinerary({ data, onPlan }) {
             >
               Trip Summary
             </div>
-
+ 
             <div
               style={{
                 display: "grid",

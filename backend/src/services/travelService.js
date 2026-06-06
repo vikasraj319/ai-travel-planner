@@ -122,29 +122,34 @@ async function createTrip(data) {
 
 async function saveTrip(data, itinerary) {
   try {
-    validateTrip(data)
 
-    console.log("Saving itinerary:", itinerary)
+    validateTrip(data);
 
     const trip = {
       ...createTripModel(data),
-      itinerary: JSON.stringify(itinerary)
-    }
+
+      // IMPORTANT:
+      // store plain text, NOT JSON.stringify
+      itinerary
+    };
 
     const { data: result, error } = await supabase
       .from('trips')
       .insert([trip])
-      .select()
+      .select();
 
-    console.log("RESULT:", result)
-    console.log("ERROR:", error)
+    if (error) {
+      console.error("SUPABASE ERROR:", error);
+      throw error;
+    }
 
-    if (error) throw error
+    console.log("Trip saved:", result);
 
-    return result[0]
+    return result[0];
 
   } catch (err) {
-    console.error(err)
+    console.error("SAVE ERROR:", err);
+    throw err;
   }
 }
 

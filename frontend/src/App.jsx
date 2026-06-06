@@ -12,7 +12,6 @@ import HowItWorks from "./components/HowItWorks";
 import Testimonials from "./components/Testimonials";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
-import Cursor from "./components/Cursor";
 import useReveal from "./hooks/useReveal";
 import Map from "./components/Map";
 import "./styles.css";
@@ -97,11 +96,10 @@ console.log("ITINERARY:", itinerary);
         </div>
       </div>
       <Destinations onPlan={handlePlan} />
-      {itinerary && <Itinerary data={itinerary} />}
+      {itinerary && <Itinerary data={itinerary} />}  
       <Testimonials />
       <CTA />
       <Footer />
-      <Cursor />
     </div>
   );
 }

@@ -2,6 +2,8 @@ const { saveTrip } = require('../services/travelService.js');
 const { createTrip } = require('../services/travelService.js');
 const asyncHandler = require('../utils/asyncHandler');
 const { chatWithPlanner, generateTravelPlan } = require('../services/travelService');
+const { extractTripData } = require('../utils/extractTripData');
+const { getTrips } = require("../services/tripService");
 
 const postChat = asyncHandler(async (req, res) => {
   const result = await chatWithPlanner(req.validatedBody);
@@ -20,38 +22,32 @@ const postChat = asyncHandler(async (req, res) => {
 });
 
 const postTravelPlan = asyncHandler(async (req, res) => {
-  // 1. Generate AI itinerary
-  console.log("postTravelPlan hit");
-  console.log(req.validatedBody);
+
+  // Generate itinerary
   const result = await generateTravelPlan(req.validatedBody);
 
-  // 2. Save to database
-  console.log("AI RESULT:");
-  console.log(result);
+  // Save to DB
+  const tripData = extractTripData(req.validatedBody.prompt);
+
+  console.log("EXTRACTED:", tripData);
+
   const savedTrip = await saveTrip(
-    {
-      destination: req.validatedBody.destination || "Unknown",
-      budget: req.validatedBody.budget || 0,
-      days: req.validatedBody.days || 1
-    },
+    tripData,
     result.plan
   );
 
-  console.log("Trip saved:", savedTrip);
-
-  // 3. Send response
+  // Send CLEAN frontend response
   res.status(200).json({
     success: true,
-    message: result.usedFallback
-      ? 'Travel plan generated using fallback response'
-      : 'Travel plan generated successfully',
 
-    data: {
-      plan: result.plan,
+    plan: result.plan,
+
+    meta: {
       source: result.source,
-      usedFallback: result.usedFallback,
-      savedTrip
-    }
+      usedFallback: result.usedFallback
+    },
+
+    savedTripId: savedTrip.id
   });
 });
 
@@ -64,11 +60,26 @@ const postTravelPlan = asyncHandler(async (req, res) => {
   }
 }
 
+const fetchTrips = asyncHandler(
+  async (req, res) => {
+
+    const userId = req.user.id;
+
+    const trips =
+      await getTrips(userId);
+
+    res.status(200).json({
+      success: true,
+      trips
+    });
+
+  }
+);
 
 
 module.exports = {
   postChat,
   postTravelPlan,
-
+  fetchTrips,
   generateTrip
 };

@@ -31,6 +31,13 @@ RULES:
 - Limit each day to 3 activities.
 - Keep food and tips under 5 items.
 - Return compact JSON only
+- If budget is not provided by the user,
+  generate a realistic mid-range budget
+  appropriate for the destination and travel style.
+- Always generate budget in the local currency
+  of the destination country.
+- Include proper currency symbols.
+
 
 FORMAT:
 
