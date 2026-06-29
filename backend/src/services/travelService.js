@@ -1,5 +1,5 @@
 const { supabase } = require('../lib/supabase');
-const { validateTrip, createTripModel } = require('../models/tripmodel');
+const { validateTrip, createTripModel } = require('../models/tripModel');
 const { generateText } = require('./aiService');
 const { buildMockReply, buildMockPlan } = require('./mockTravelService');
 const { CHAT_SYSTEM_PROMPT, PLAN_SYSTEM_PROMPT } = require('../constants/systemPrompts');
@@ -66,6 +66,7 @@ async function generateTravelPlan(payload) {
     try {
 
       parsedPlan = JSON.parse(cleanText);
+      console.log(parsedPlan);
 
     } catch (err) {
 
@@ -89,7 +90,7 @@ async function generateTravelPlan(payload) {
   }
 
   return {
-    plan: "AI is temporarily unavialable. Please try agian later",
+    plan: "AI is temporarily unavailable. Please try again later",
     source: 'mock',
     usedFallback: true,
     error: aiResult.error

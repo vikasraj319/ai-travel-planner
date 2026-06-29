@@ -11,10 +11,13 @@ const createProfile = async (req, res) => {
       username: req.body.username,
       full_name: req.body.full_name,
       bio: req.body.bio,
-      country: req.body.country
+      country: req.body.country,
+      travel_style: req.body.travel_style,
+      budget_preference: req.body.budget_preference,
+      interests: req.body.interests
     };
 
-    const profile = await saveProfile(profileData);
+    const profile = await saveProfile(profileData, req.accessToken);
 
     res.status(201).json({
       success: true,

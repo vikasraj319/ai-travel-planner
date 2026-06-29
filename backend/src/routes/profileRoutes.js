@@ -6,7 +6,7 @@ const {
 
 const {
   authenticateUser
-} = require('../middleware/authenticateUser');
+} = require('../middleware/authMiddleware');
 
 const router = express.Router();
 

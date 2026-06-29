@@ -37,12 +37,28 @@ RULES:
 - Always generate budget in the local currency
   of the destination country.
 - Include proper currency symbols.
+- Always generate "destination".
+- Always generate "tripType".
+- Always generate "theme".
+- Always generate "imagePrompt".
+
+imagePrompt must:
+- describe the most scenic view
+- be suitable as a website hero background
+- use cinematic photography style
+- avoid people
+- avoid logos
+- avoid text
 
 
 FORMAT:
 
 {
   "title": "Trip title",
+  "destination": "Destination name",
+  "tripType": "Beach | Adventure | Nature | Luxury | Cultural | Spiritual | Road Trip",
+  "theme": "Short visual theme",
+  "imagePrompt": "Highly scenic travel wallpaper search prompt",
   "overview": "2-3 line summary",
   "budget": {
     "stay": "",

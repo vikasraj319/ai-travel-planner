@@ -1,19 +1,23 @@
-const { validateProfile } = require("../models/profileModel");
-const {supabase} = require("../lib/supabase");
-const profiles = [];
+const { createSupabaseForToken, supabase } = require("../lib/supabase");
 
-async function saveProfile(profileData) {
+async function saveProfile(profileData, accessToken) {
+  const client = accessToken
+    ? createSupabaseForToken(accessToken)
+    : supabase;
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("profiles")
-    .insert([profileData])
-    .select();
+    .upsert(profileData, {
+      onConflict: "id"
+    })
+    .select()
+    .single();
 
   if (error) {
     throw error;
   }
 
-  return data[0];
+  return data;
 }
 
 module.exports = {

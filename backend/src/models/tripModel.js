@@ -22,6 +22,7 @@
 
 function createTripModel(data) {
   return {
+    user_id: data.user_id,
     destination: data.destination,
     budget: Number(data.budget),
     days: Number(data.days),

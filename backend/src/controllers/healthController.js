@@ -8,7 +8,7 @@ function getHealth(req, res) {
       status: 'ok',
       environment: env.nodeEnv,
       aiProvider: env.aiProvider,
-      aiConfigured: Boolean(env.anthropic.apiKey),
+      aiConfigured: Boolean(env.gemini.apiKey),
       timestamp: new Date().toISOString()
     }
   });

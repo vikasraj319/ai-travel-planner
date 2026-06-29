@@ -8,6 +8,7 @@ const corsOptions = require('./config/corsOptions');
 const healthRoutes = require('./routes/healthRoutes');
 const travelRoutes = require('./routes/travelRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const imageRoutes = require("./routes/imageRoutes");
 const requestLogger = require('./middleware/requestLogger');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -65,6 +66,7 @@ app.post('/api/save-trip', async (req, res) => {
 app.use('/api', healthRoutes);
 app.use('/api', travelRoutes);
 app.use('/api', profileRoutes);
+app.use('/api/images', imageRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

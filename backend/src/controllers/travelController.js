@@ -1,8 +1,5 @@
-const { saveTrip } = require('../services/travelService.js');
-const { createTrip } = require('../services/travelService.js');
+const { saveTrip, createTrip, chatWithPlanner, generateTravelPlan } = require('../services/travelService.js');
 const asyncHandler = require('../utils/asyncHandler');
-const { chatWithPlanner, generateTravelPlan } = require('../services/travelService');
-const { extractTripData } = require('../utils/extractTripData');
 const { getTrips } = require("../services/tripService");
 
 const postChat = asyncHandler(async (req, res) => {
@@ -23,31 +20,37 @@ const postChat = asyncHandler(async (req, res) => {
 
 const postTravelPlan = asyncHandler(async (req, res) => {
 
-  // Generate itinerary
   const result = await generateTravelPlan(req.validatedBody);
 
-  // Save to DB
-  const tripData = extractTripData(req.validatedBody.prompt);
+  const plan = result.plan;
 
-  console.log("EXTRACTED:", tripData);
+  let savedTripId = null;
 
-  const savedTrip = await saveTrip(
-    tripData,
-    result.plan
-  );
+  // Only save to DB if user is authenticated
+  if (req.user) {
+    const budgetTotal = plan.budget && typeof plan.budget === "object"
+      ? Object.values(plan.budget).reduce((sum, v) => sum + (Number(v) || 0), 0)
+      : Number(plan.budget) || 0;
 
-  // Send CLEAN frontend response
+    const tripData = {
+      destination: plan.destination || plan.title || "Unknown",
+      budget: budgetTotal,
+      days: plan.days?.length || 1,
+      user_id: req.user.id
+    };
+
+    const savedTrip = await saveTrip(tripData, result.plan);
+    savedTripId = savedTrip.id;
+  }
+
   res.status(200).json({
     success: true,
-
     plan: result.plan,
-
     meta: {
       source: result.source,
       usedFallback: result.usedFallback
     },
-
-    savedTripId: savedTrip.id
+    savedTripId
   });
 });
 
