@@ -5,7 +5,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -54,7 +54,13 @@ const Signup = () => {
       return;
     }
 
-    navigate('/dashboard');
+    if (res.data?.session) {
+      navigate('/dashboard');
+      return;
+    }
+
+    setError('Account created. Please confirm your email before logging in.');
+    setLoading(false);
   };
 
   return (

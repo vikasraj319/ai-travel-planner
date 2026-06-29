@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { apiUrl } from "../lib/api";
 
 export default function SavedTrips() {
 
@@ -23,9 +24,14 @@ export default function SavedTrips() {
     const token =
       session?.access_token;
 
+    if (!token) {
+      setTrips([]);
+      return;
+    }
+
     // Fetch protected route
     const res = await fetch(
-      "http://localhost:5000/api/trips",
+      apiUrl("/api/trips"),
       {
 
         headers: {

@@ -15,9 +15,7 @@ import Footer from "./components/Footer";
 import useReveal from "./hooks/useReveal";
 import Map from "./components/Map";
 import "./styles.css";
-import { use } from "react";
 
-console.log(Itinerary);
 export default function App() {
   useReveal();
   const plannerRef = useRef();
@@ -49,36 +47,6 @@ export default function App() {
   plannerRef.current?.sendMessage(text);
 }
 
-console.log("ITINERARY:", itinerary);
-
-
-
-  async function handleSave() {
-  if (!itinerary) return;
-
-  try {
-    const res = await fetch("http://localhost:5000/api/save-trip", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        destination: Itinerary?.title,
-        itinerary: Itinerary
-      })
-    });
-
-    const data = await res.json();
-
-    console.log("Saved:", data);
-    alert("Trip saved successfully!");
-
-  } catch (err) {
-    console.error(err);
-    alert("Failed to save trip");
-  }
-}
-
   return (
     <div className="app">
       <Navbar />
@@ -96,7 +64,7 @@ console.log("ITINERARY:", itinerary);
         </div>
       </div>
       <Destinations onPlan={handlePlan} />
-      {itinerary && <Itinerary data={itinerary} />}  
+      {itinerary && <Itinerary data={itinerary} onPlan={handlePlan} />}
       <Testimonials />
       <CTA />
       <Footer />

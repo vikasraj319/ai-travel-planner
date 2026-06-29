@@ -25,6 +25,17 @@
     cursor: none;
   }
 
+  html,
+  body {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
   html, body, #root {
   height: 100%;
   width: 100%;
@@ -590,85 +601,519 @@
   .dest-card:hover .dest-plan-btn { opacity: 1; transform: translateY(0); }
   .dest-plan-btn:hover { background: rgba(201,169,110,0.15); }
 
-  /* ITINERARY PREVIEW */
-  #itinerary {
-    padding: 6rem 3rem;
-    background: var(--ink);
-  }
+  /* =========================
+   ITINERARY PAGE
+========================= */
+
+.itinerary-page {
+  position: relative;
+
+  margin: 3rem auto;
+
+  /* width: min(1700px, 98%); */
+  width: 98%;
+  max-width: 1800px;
+
+  border-radius: 28px;
+
+  overflow: hidden;
+
+  /* border: 1px solid rgba(255,255,255,0.8); */
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.45);
+}
+
+
+.background-layer {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  z-index: 0;
+}
+
+.itinerary-overlay {
+  position: relative;
+
+  z-index: 1;
+  padding: 
+    3rem
+    clamp(1rem, 1.5vw, 2rem)
+    3rem;
+  background:
+    linear-gradient(
+      rgba(0,0,0,0.75),
+      rgba(0,0,0,0.85)
+    );
+}
+
+.section-title {
+  font-size: clamp(2.5rem, 5vw, 5rem);
+
+  color: white;
+
+  text-align: center;
+
+  font-weight: 700;
+
+  margin-bottom: 1rem;
+
+  position: relative;
+  z-index: 2;
+
+  text-shadow:
+    0 4px 12px rgba(0,0,0,0.7),
+    0 8px 24px rgba(0,0,0,0.5);
+}
+
+.itin-desc {
+  max-width: 900px;
+
+  margin: 0 auto 3rem;
+
+  text-align: center;
+
+  color: rgba(255,255,255,0.9);
+
+  line-height: 1.8;
+}
+
+#itinerary {
+  background: transparent;
+
+  padding: 0;
+
+  scroll-margin-top: 5rem;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.itin-layout {
+  width: min(1300px, 100%);
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(350px, 0.9fr);
+
+  gap: 2rem;
+
+  align-items: start;
+}
+
+.itin-left,
+.itin-right {
+  min-width: 0;
+}
+
+.itin-right {
+  position: sticky;
+
+  top: 100px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1.5rem;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.section-eyebrow {
+  justify-content: center;
+
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  text-align: center !important;
+
+  font-size:
+    clamp(3rem, 7vw, 6rem) !important;
+
+  color: white;
+
+  margin-bottom: 1rem;
+}
+
+.itin-desc {
+  max-width: 900px;
+
+  margin:
+    0 auto
+    4rem;
+
+  text-align: center;
+
+  color:
+    rgba(255,255,255,0.85);
+
+  line-height: 1.9;
+
+  font-size: 1rem;
+}
+
+/* =========================
+   GLASS CARDS
+========================= */
+
+.itin-sample,
+.itin-summary-card,
+.itin-map-placeholder {
+  background:
+    rgba(10,10,15,0.9);
+
+  backdrop-filter:
+    blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  border-radius: 24px;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.35);
+}
+
+/* =========================
+   DAY CARDS
+========================= */
+
+.itin-sample {
+  padding: 1.5rem;
+}
+
+.itin-day {
+  position: relative;
+
+  padding-left: 1.5rem;
+
+  padding-bottom: 1.5rem;
+
+  margin-bottom: 1.5rem;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.08);
+}
+
+.itin-day:last-child {
+  border-bottom: none;
+
+  margin-bottom: 0;
+
+  padding-bottom: 0;
+}
+
+.itin-day::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  top: 0.25rem;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  background: var(--gold);
+
+  box-shadow:
+    0 0 0 6px rgba(201,169,110,0.12);
+}
+
+.itin-day-num {
+  color: var(--gold);
+
+  font-size: 0.72rem;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+}
+
+.itin-day-title {
+  margin-top: 0.4rem;
+
+  font-size: 1.15rem;
+
+  color: white;
+}
+
+.itin-activities {
+  margin-top: 1rem;
+
+  display: grid;
+
+  gap: 1rem;
+}
+
+.itin-act {
+  display: grid;
+
+  grid-template-columns:
+    80px
+    1fr;
+
+  gap: 1rem;
+}
+
+.itin-time {
+  color: var(--gold);
+
+  font-size: 0.75rem;
+}
+
+.itin-act-name {
+  color: white;
+
+  line-height: 1.6;
+}
+
+.itin-act-location {
+  color: rgba(255,255,255,0.55);
+
+  font-size: 0.8rem;
+
+  margin-top: 0.25rem;
+}
+
+/* =========================
+   MAP CARD
+========================= */
+
+.itin-map-placeholder {
+  min-height: 260px;
+
+  overflow: hidden;
+
+  position: relative;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+}
+
+.map-bg {
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0.25;
+
+  background:
+    linear-gradient(
+      rgba(74,111,165,0.4) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(74,111,165,0.4) 1px,
+      transparent 1px
+    );
+
+  background-size: 40px 40px;
+}
+
+.map-label {
+  position: relative;
+
+  z-index: 2;
+
+  text-align: center;
+}
+
+/* =========================
+   SUMMARY CARD
+========================= */
+
+.itin-summary-card {
+  padding: 1.5rem;
+}
+
+.itin-panel-title {
+  color: var(--gold);
+
+  font-size: 0.72rem;
+
+  letter-spacing: 0.18em;
+
+  text-transform: uppercase;
+
+  margin-bottom: 1rem;
+}
+
+.itin-budget-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 1rem;
+}
+
+.itin-budget-item {
+  padding: 0.5rem 0;
+}
+
+.itin-budget-label {
+  color: rgba(255,255,255,0.55);
+
+  font-size: 0.8rem;
+}
+
+.itin-budget-value {
+  color: white;
+
+  font-size: 1.1rem;
+
+  font-weight: 600;
+}
+
+.itin-tips {
+  margin-top: 2rem;
+}
+
+.itin-tips ul {
+  color: rgba(255,255,255,0.8);
+
+  line-height: 1.8;
+}
+
+/* =========================
+   FOOD TAGS
+========================= */
+
+.itin-tags {
+  margin-top: 2rem;
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 0.75rem;
+}
+
+.itin-tag {
+  padding:
+    0.55rem
+    1rem;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.itin-tag.active {
+  color: var(--gold);
+
+  border-color:
+    rgba(201,169,110,0.4);
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.itin-plan-button {
+  width: 100%;
+
+  margin-top: 2rem;
+
+  padding: 1rem;
+
+  border-radius: 12px;
+
+  background:
+    rgba(201,169,110,0.1);
+
+  border:
+    1px solid rgba(201,169,110,0.35);
+
+  color: var(--gold);
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.itin-plan-button:hover {
+  background:
+    rgba(201,169,110,0.2);
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 900px) {
+
   .itin-layout {
-    display: grid; grid-template-columns: 1fr 1.3fr;
-    gap: 5rem; margin-top: 4rem; align-items: start;
+    grid-template-columns: 1fr;
   }
-  @media(max-width: 900px) { .itin-layout { grid-template-columns: 1fr; } }
 
-  .itin-left {}
-  .itin-desc {
-    color: var(--mist); font-size: 0.9rem; line-height: 1.8;
-    margin-top: 1.5rem; margin-bottom: 2.5rem;
+  .itin-right {
+    position: static;
   }
-  .itin-sample {
-    background: var(--ink2);
-    border: 1px solid rgba(201,169,110,0.15);
-    border-radius: 3px; padding: 2rem;
+
+  .section-title {
+    font-size: 3rem !important;
   }
-  .itin-sample-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--gold);
-  }
-  .itin-day { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .itin-day:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  .itin-day-num {
-    font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 0.5rem;
-  }
-  .itin-day-title { font-size: 1rem; font-weight: 500; margin-bottom: 0.75rem; }
-  .itin-activities { display: flex; flex-direction: column; gap: 0.5rem; }
+
+}
+
+@media (max-width: 600px) {
+
   .itin-act {
-    display: flex; gap: 0.75rem; align-items: flex-start;
-    font-size: 0.82rem; color: var(--mist);
-  }
-  .itin-time {
-    font-size: 0.7rem; color: var(--gold); min-width: 50px; margin-top: 1px;
+    grid-template-columns: 1fr;
   }
 
-  .itin-right {}
-  .itin-map-placeholder {
-    background: var(--ink2);
-    border: 1px solid rgba(201,169,110,0.1);
-    border-radius: 3px;
-    height: 400px; position: relative; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .map-bg {
-    position: absolute; inset: 0; opacity: 0.3;
-    background:
-      linear-gradient(rgba(74,111,165,0.3) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(74,111,165,0.3) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-  .map-label {
-    position: relative; text-align: center;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem; color: var(--mist); font-style: italic;
-  }
-  .map-pin {
-    font-size: 2rem; display: block; margin-bottom: 0.5rem;
+  .itin-budget-grid {
+    grid-template-columns: 1fr;
   }
 
-  .itin-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
-  .itin-tag {
-    padding: 0.35rem 0.85rem;
-    border: 1px solid rgba(255,255,255,0.08);
-    font-size: 0.7rem; color: var(--mist);
-    letter-spacing: 0.08em;
-    border-radius: 1px;
-  }
-  .itin-tag.active {
-    border-color: rgba(201,169,110,0.4);
-    color: var(--gold);
-    background: rgba(201,169,110,0.08);
+}
+
+@media (max-width: 768px) {
+
+  .itinerary-page {
+    width: 98%;
+
+    margin: 2rem auto;
+
+    border-radius: 20px;
   }
 
+  .itinerary-overlay {
+    padding: 1.5rem;
+  }
+
+}
   /* TESTIMONIALS */
   #testimonials {
     background: var(--ink2);
@@ -1458,6 +1903,81 @@
 /* =========================
   Profile SECTION
 ========================= */
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5,5,10,0.72);
+  backdrop-filter: blur(12px);
+}
+
+.profile-modal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18,18,26,0.98);
+  border: 1px solid rgba(201,169,110,0.22);
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+}
+
+.profile-form {
+  min-height: 0;
+  overflow-y: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  padding-bottom: 1.25rem;
+}
+
+.close-profile {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(201,169,110,0.24);
+  border-radius: 50%;
+  background: rgba(10,10,15,0.76);
+  color: var(--gold);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.profile-title {
+  padding-right: 3rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  line-height: 1.1;
+  font-weight: 300;
+}
+
+.profile-message {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.profile-message-error {
+  color: #ffd5d5;
+  border: 1px solid rgba(255,90,90,0.28);
+  background: rgba(255,90,90,0.08);
+}
+
+.profile-message-success {
+  color: #dbffd5;
+  border: 1px solid rgba(106,210,120,0.28);
+  background: rgba(106,210,120,0.08);
+}
+
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1468,7 +1988,7 @@
 .profile-card {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(201,169,110,0.15);
-  border-radius: 18px;
+  border-radius: 6px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -1493,6 +2013,10 @@
   font-size: 0.95rem;
 }
 
+.profile-card select option {
+  color: #111;
+}
+
 .profile-card textarea {
   min-height: 100px;
   resize: vertical;
@@ -1502,10 +2026,110 @@
   margin-top: 1rem;
 }
 
+.profile-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  background: linear-gradient(to top, rgba(18,18,26,1), rgba(18,18,26,0.82));
+}
+
+.save-profile-btn {
+  min-width: 170px;
+  min-height: 44px;
+  padding: 0.85rem 1.35rem;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.25s, transform 0.2s, opacity 0.25s;
+}
+
+.save-profile-btn:hover:not(:disabled) {
+  background: var(--gold2);
+  transform: translateY(-1px);
+}
+
+.save-profile-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 @media (max-width: 768px) {
   .profile-grid {
     grid-template-columns: 1fr;
   }
+
+  .profile-overlay {
+    align-items: stretch;
+    padding: 0.75rem;
+  }
+
+  .profile-modal {
+    max-height: 100%;
+  }
+
+  .profile-actions,
+  .save-profile-btn {
+    width: 100%;
+  }
+}
+
+/* Profile Modal Scrollbar */
+
+.profile-modal {
+  overflow-y: auto;
+}
+
+/* Chrome / Edge / Safari */
+.profile-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-modal::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
+  border-radius: 999px;
+}
+
+.profile-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(201,169,110,0.65),
+    rgba(201,169,110,0.35)
+  );
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(201,169,110,0.15);
+
+  transition: all 0.3s ease;
+}
+
+.profile-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(201,169,110,0.95),
+    rgba(212,176,106,0.75)
+  );
+
+  box-shadow:
+    0 0 10px rgba(201,169,110,0.25);
+}
+
+/* Firefox */
+.profile-modal {
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(201,169,110,0.65)
+    rgba(255,255,255,0.03);
 }
 /* =========================
    SAVED TRIPS PAGE

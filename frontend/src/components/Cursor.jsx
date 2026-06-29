@@ -10,6 +10,7 @@ export default function Cursor() {
 
     let mouseX = 0, mouseY = 0;
     let ringX = 0, ringY = 0;
+    let rafId = null;
 
     function handleMouseMove(e) {
       mouseX = e.clientX;
@@ -30,7 +31,7 @@ export default function Cursor() {
         cursorRing.style.top = ringY + "px";
       }
 
-      requestAnimationFrame(animateRing);
+      rafId = requestAnimationFrame(animateRing);
     }
 
     function handleHover(e) {
@@ -62,6 +63,7 @@ export default function Cursor() {
         el.removeEventListener("mouseenter", handleHover);
         el.removeEventListener("mouseleave", handleHover);
       });
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { supabase } from "../lib/supabase";
+import { apiUrl } from "../lib/api";
 
 export default function Profile({ onClose }) {
 
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    name: user?.user_metadata?.full_name || "",
     email: user?.email || "",
     country: "",
     bio: "",
@@ -15,6 +16,9 @@ export default function Profile({ onClose }) {
     budget_preference: "",
     interests: ""
   });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   function handleChange(e) {
 
@@ -26,23 +30,25 @@ export default function Profile({ onClose }) {
     }));
   }
 
-  async function handleSaveProfile() {
+  async function handleSaveProfile(e) {
+    e.preventDefault();
 
     try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
 
       const {
         data: { session }
       } = await supabase.auth.getSession();
 
       if (!session) {
-        alert("Please login first");
+        setError("Please login first.");
         return;
       }
 
-      console.log("FORM DATA:", formData);
-
       const res = await fetch(
-        "http://localhost:5000/api/profile",
+        apiUrl("/api/profile"),
         {
           method: "POST",
           headers: {
@@ -63,21 +69,23 @@ export default function Profile({ onClose }) {
 
       const data = await res.json();
 
-      console.log("PROFILE RESPONSE:", data);
-
       if (!res.ok) {
         throw new Error(data.message || "Failed to save profile");
       }
 
-      alert("Profile saved successfully!");
+      setSuccess("Profile saved successfully.");
 
-      onClose();
+      window.setTimeout(() => {
+        onClose();
+      }, 500);
 
     } catch (err) {
 
       console.error(err);
 
-      alert(err.message || "Failed to save profile");
+      setError(err.message || "Failed to save profile");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -94,92 +102,109 @@ export default function Profile({ onClose }) {
           ✕
         </button>
 
-        <h2 className="profile-title">
-          Your Travel Profile
-        </h2>
+        <form className="profile-form" onSubmit={handleSaveProfile}>
+          <h2 className="profile-title">
+            Your Travel Profile
+          </h2>
 
-        <div className="profile-grid">
+          {error && (
+            <div className="profile-message profile-message-error">
+              {error}
+            </div>
+          )}
 
-          <div className="profile-card">
-            <span className="profile-card-label">Name</span>
+          {success && (
+            <div className="profile-message profile-message-success">
+              {success}
+            </div>
+          )}
+
+          <div className="profile-grid">
+
+            <div className="profile-card">
+              <span className="profile-card-label">Name</span>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="profile-card">
+              <span className="profile-card-label">Email</span>
+              <input
+                type="email"
+                value={formData.email}
+                readOnly
+                className="profile-readonly"
+              />
+            </div>
+
+            <div className="profile-card">
+              <span className="profile-card-label">Country</span>
+              <input
+                type="text"
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="profile-card">
+              <span className="profile-card-label">Travel Style</span>
+              <select
+                name="travel_style"
+                value={formData.travel_style}
+                onChange={handleChange}
+              >
+                <option value="">Select Style</option>
+                <option value="Budget">Budget</option>
+                <option value="Luxury">Luxury</option>
+                <option value="Adventure">Adventure</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div className="profile-card profile-wide">
+            <span className="profile-card-label">Budget Preference</span>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="budget_preference"
+              value={formData.budget_preference}
               onChange={handleChange}
             />
           </div>
 
-          <div className="profile-card">
-            <span className="profile-card-label">Email</span>
-            <input
-              type="email"
-              value={formData.email}
-              readOnly
-              className="profile-readonly"
-            />
-          </div>
-
-          <div className="profile-card">
-            <span className="profile-card-label">Country</span>
-            <input
-              type="text"
-              name="country"
-              value={formData.country}
+          <div className="profile-card profile-wide">
+            <span className="profile-card-label">Bio</span>
+            <textarea
+              name="bio"
+              value={formData.bio}
               onChange={handleChange}
             />
           </div>
 
-          <div className="profile-card">
-            <span className="profile-card-label">Travel Style</span>
-            <select
-              name="travel_style"
-              value={formData.travel_style}
+          <div className="profile-card profile-wide">
+            <span className="profile-card-label">Interests</span>
+            <textarea
+              name="interests"
+              value={formData.interests}
               onChange={handleChange}
+            />
+          </div>
+
+          <div className="profile-actions">
+            <button
+              className="save-profile-btn"
+              type="submit"
+              disabled={saving}
             >
-              <option value="">Select Style</option>
-              <option value="Budget">Budget</option>
-              <option value="Luxury">Luxury</option>
-              <option value="Adventure">Adventure</option>
-            </select>
+              {saving ? "Saving..." : "Save Profile"}
+            </button>
           </div>
-
-        </div>
-
-        <div className="profile-card profile-wide">
-          <span className="profile-card-label">Budget Preference</span>
-          <input
-            type="text"
-            name="budget_preference"
-            value={formData.budget_preference}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="profile-card profile-wide">
-          <span className="profile-card-label">Bio</span>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="profile-card profile-wide">
-          <span className="profile-card-label">Interests</span>
-          <textarea
-            name="interests"
-            value={formData.interests}
-            onChange={handleChange}
-          />
-        </div>
-
-        <button
-          className="save-profile-btn"
-          onClick={handleSaveProfile}
-        >
-          Save Profile
-        </button>
+        </form>
 
       </div>
 

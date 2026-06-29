@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { forwardRef, useImperativeHandle } from "react";
 import { useEffect } from "react";
+import { apiUrl } from "../lib/api";
+import { supabase } from "../lib/supabase";
 
 const suggestions = [
   "7 days in Tokyo, food focused and hidden spots",
@@ -27,7 +29,14 @@ const Planner = forwardRef(({ onResult }, ref) => {
   }));
 
   function formatText(text) {
-    return text
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+    return escaped
       .replace(/\n/g, "<br>")
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
       .replace(/✦/g, '<span style="color:gold">✦</span>');
@@ -51,11 +60,21 @@ const Planner = forwardRef(({ onResult }, ref) => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/travel-plan", {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+
+      const headers = {
+        "Content-Type": "application/json"
+      };
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch(apiUrl("/api/travel-plan"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers,
         body: JSON.stringify({
         prompt: text
       })
@@ -116,10 +135,7 @@ onResult?.(parsed);
               <div
                 className="msg-bubble"
                 dangerouslySetInnerHTML={{
-                  __html:
-                    msg.role === "ai"
-                      ? formatText(msg.text)
-                      : msg.text
+                  __html: formatText(msg.text)
                 }}
               ></div>
             </div>
@@ -150,6 +166,7 @@ onResult?.(parsed);
         {/* Input */}
         <div className="chat-input-area">
           <input
+            id="chatInput"
             className="chat-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
