@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
 
   // =========================
   // Get Current Session
@@ -68,8 +69,11 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      if (error) throw error;
-
+      if (error) {
+        setAuthError(error.message);
+        throw error;
+      }
+      setAuthError(null);
       return {
         success: true,
         data,
@@ -93,8 +97,11 @@ export const AuthProvider = ({ children }) => {
           password,
         });
 
-      if (error) throw error;
-
+      if (error) {
+        setAuthError(error.message);
+        throw error;
+      }
+      setAuthError(null);
       return {
         success: true,
         data,
@@ -114,8 +121,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const { error } = await supabase.auth.signOut();
 
-      if (error) throw error;
+      if (error) {
+        setAuthError(error.message);
+        throw error;
+      }
 
+      setAuthError(null);
       setUser(null);
       setSession(null);
 
@@ -123,6 +134,7 @@ export const AuthProvider = ({ children }) => {
         success: true,
       };
     } catch (error) {
+      setAuthError(error.message);
       return {
         success: false,
         error: error.message,
@@ -142,12 +154,17 @@ export const AuthProvider = ({ children }) => {
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        setAuthError(error.message);
+        throw error;
+      }
 
+      setAuthError(null);
       return {
         success: true,
       };
     } catch (error) {
+      setAuthError(error.message);
       return {
         success: false,
         error: error.message,
@@ -182,6 +199,7 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     loading,
+    authError,
     signUp,
     login,
     logout,

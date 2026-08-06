@@ -41,6 +41,9 @@ RULES:
 - Always generate "tripType".
 - Always generate "theme".
 - Always generate "imagePrompt".
+- Every activity item inside "activities" MUST include an "imageSearchQuery" property.
+- "imageSearchQuery" MUST be a highly specific image search query in the format: "<Specific Landmark/Place Name>, <Destination>, <Country>".
+  Example: "Fort Aguada, Goa, India", "Candolim Market, Goa, India", "Baga Beach, Goa, India", "Fushimi Inari Shrine, Kyoto, Japan". Never use generic words like "Beach" or "Fort" alone.
 
 imagePrompt must:
 - describe the most scenic view
@@ -73,8 +76,9 @@ FORMAT:
       "activities": [
         {
           "time": "09:00",
-          "activity": "Visit place",
-          "location": "Place name"
+          "activity": "Visit Fort Aguada",
+          "location": "Fort Aguada",
+          "imageSearchQuery": "Fort Aguada, Goa, India"
         }
       ]
     }
@@ -97,3 +101,4 @@ module.exports = {
   CHAT_SYSTEM_PROMPT,
   PLAN_SYSTEM_PROMPT
 };
+

@@ -31,6 +31,48 @@ async function chatWithPlanner({ message, history = [] }) {
   };
 }
 
+function extractLandmarkName(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/^(visit|explore|check in at|head to|tour of|walk around|dinner at|lunch at|breakfast at|enjoy|relax at|stop by)\s+/i, '')
+    .trim();
+}
+
+function enrichPlanWithImageQueries(plan) {
+  if (!plan || typeof plan !== 'object') return plan;
+
+  const destination = plan.destination || plan.title || 'Travel';
+
+  if (Array.isArray(plan.days)) {
+    plan.days.forEach(day => {
+      if (Array.isArray(day.activities)) {
+        day.activities.forEach(act => {
+          if (!act || typeof act !== 'object') return;
+
+          if (!act.imageSearchQuery || typeof act.imageSearchQuery !== 'string' || !act.imageSearchQuery.trim()) {
+            const rawPlace = act.location || extractLandmarkName(act.activity || act.title || '');
+            const placeName = rawPlace ? rawPlace.trim() : '';
+
+            if (placeName && destination) {
+              if (placeName.toLowerCase().includes(destination.toLowerCase())) {
+                act.imageSearchQuery = placeName;
+              } else {
+                act.imageSearchQuery = `${placeName}, ${destination}`;
+              }
+            } else if (placeName) {
+              act.imageSearchQuery = placeName;
+            } else {
+              act.imageSearchQuery = destination;
+            }
+          }
+        });
+      }
+    });
+  }
+
+  return plan;
+}
+
 async function generateTravelPlan(payload) {
   const userPrompt = buildTravelPlanPrompt(payload);
 
@@ -66,6 +108,7 @@ async function generateTravelPlan(payload) {
     try {
 
       parsedPlan = JSON.parse(cleanText);
+      parsedPlan = enrichPlanWithImageQueries(parsedPlan);
       console.log(parsedPlan);
 
     } catch (err) {

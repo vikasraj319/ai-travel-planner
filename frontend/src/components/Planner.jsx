@@ -1,29 +1,35 @@
-import { useState, useRef } from "react";
-import { forwardRef, useImperativeHandle } from "react";
-import { useEffect } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { Bot, CalendarDays, Coins, MapPin, Send, Sparkles, UsersRound } from "lucide-react";
+import { motion } from "framer-motion";
 import { apiUrl } from "../lib/api";
 import { supabase } from "../lib/supabase";
 
+const MotionDiv = motion.div;
+
 const suggestions = [
   "7 days in Tokyo, food focused and hidden spots",
-  "Romantic Paris under €2000",
+  "Romantic Paris under EUR 2000",
   "Adventure in Patagonia in November",
   "Cultural Morocco trip for 10 days",
 ];
 
 const Planner = forwardRef(({ onResult }, ref) => {
+  const [formData, setFormData] = useState({
+    destination: "",
+    days: "",
+    budget: "",
+    style: ""
+  });
   const [messages, setMessages] = useState([
     {
       role: "ai",
-      text: "Welcome to Horizons ✦ Tell me about your dream trip."
+      text: "Welcome to Horizons AI. Share a destination or use the trip form and I will build the itinerary."
     }
   ]);
-
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatRef = useRef(null);
 
-  // ✅ expose sendMessage to parent
   useImperativeHandle(ref, () => ({
     sendMessage
   }));
@@ -38,8 +44,33 @@ const Planner = forwardRef(({ onResult }, ref) => {
 
     return escaped
       .replace(/\n/g, "<br>")
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/✦/g, '<span style="color:gold">✦</span>');
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  }
+
+  function buildPrompt() {
+    const parts = [
+      formData.destination && `Destination: ${formData.destination}`,
+      formData.days && `Number of days: ${formData.days}`,
+      formData.budget && `Budget: ${formData.budget}`,
+      formData.style && `Travel style: ${formData.style}`
+    ].filter(Boolean);
+
+    return parts.length
+      ? `Create a personalized travel itinerary. ${parts.join(". ")}.`
+      : "";
+  }
+
+  function handleFieldChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    sendMessage(buildPrompt());
   }
 
   useEffect(() => {
@@ -50,12 +81,11 @@ const Planner = forwardRef(({ onResult }, ref) => {
   }, [messages, loading]);
 
   async function sendMessage(customText) {
-    const text = customText || input;
-    if (!text.trim()) return;
+    const text = customText || input || buildPrompt();
+    if (!text.trim() || loading) return;
 
     const userMsg = { role: "user", text };
     setMessages(prev => [...prev, userMsg]);
-
     setInput("");
     setLoading(true);
 
@@ -76,35 +106,30 @@ const Planner = forwardRef(({ onResult }, ref) => {
         method: "POST",
         headers,
         body: JSON.stringify({
-        prompt: text
-      })
+          prompt: text
+        })
       });
 
-const data = await res.json();
+      const data = await res.json();
+      console.log("FULL RESPONSE:", data);
 
-console.log("FULL RESPONSE:", data);
+      const parsed = data?.plan;
 
-// Backend now returns plan directly
-const parsed = data?.plan;
+      if (!parsed) {
+        throw new Error("No itinerary returned from server");
+      }
 
-if (!parsed) {
-  throw new Error("No itinerary returned from server");
-}
+      console.log("PARSED:", parsed);
 
-console.log("PARSED:", parsed);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "ai",
+          text: "Your itinerary is ready."
+        }
+      ]);
 
-// ONLY show short message in chat
-setMessages(prev => [
-  ...prev,
-  {
-    role: "ai",
-    text: "Your itinerary is ready ✨"
-  }
-]);
-
-// Send FULL itinerary to itinerary section
-
-onResult?.(parsed);
+      onResult?.(parsed);
     } catch (err) {
       console.error(err);
 
@@ -122,12 +147,91 @@ onResult?.(parsed);
 
   return (
     <section className="planner">
-      <div id = "planner" className="chat-container">
+      <MotionDiv
+        className="planner-card"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.25 }}
+        transition={{ duration: 0.45 }}
+      >
+        <div className="planner-card-header">
+          <span className="planner-icon"><Sparkles size={20} /></span>
+          <div>
+            <p className="section-eyebrow">AI Trip Builder</p>
+            <h2>Tell us your travel style</h2>
+          </div>
+        </div>
 
-        {/* Messages */}
+        <form className="trip-form" onSubmit={handleSubmit}>
+          <label className="floating-field">
+            <MapPin size={18} />
+            <input
+              name="destination"
+              value={formData.destination}
+              onChange={handleFieldChange}
+              placeholder=" "
+              required
+            />
+            <span>Destination</span>
+          </label>
+
+          <label className="floating-field">
+            <CalendarDays size={18} />
+            <input
+              name="days"
+              type="number"
+              min="1"
+              value={formData.days}
+              onChange={handleFieldChange}
+              placeholder=" "
+              required
+            />
+            <span>Number of Days</span>
+          </label>
+
+          <label className="floating-field">
+            <Coins size={18} />
+            <input
+              name="budget"
+              value={formData.budget}
+              onChange={handleFieldChange}
+              placeholder=" "
+            />
+            <span>Budget</span>
+          </label>
+
+          <label className="floating-field">
+            <UsersRound size={18} />
+            <select name="style" value={formData.style} onChange={handleFieldChange}>
+              <option value="">Choose a style</option>
+              <option value="Relaxed">Relaxed</option>
+              <option value="Adventure">Adventure</option>
+              <option value="Culture and food">Culture and food</option>
+              <option value="Luxury">Luxury</option>
+              <option value="Family friendly">Family friendly</option>
+            </select>
+            <span>Travel Style</span>
+          </label>
+
+          <button className="generate-trip-btn" type="submit" disabled={loading}>
+            {loading ? "Generating..." : "Generate Trip"}
+            <Send size={18} />
+          </button>
+        </form>
+      </MotionDiv>
+
+      <div id="planner-chat" className="chat-container">
+        <div className="chat-header">
+          <div className="chat-avatar"><Bot size={20} /></div>
+          <div>
+            <strong>Horizons AI</strong>
+            <span>Trip planning conversation</span>
+          </div>
+        </div>
+
         <div className="chat-messages" ref={chatRef}>
           {messages.map((msg, i) => (
-            <div key={i} className={`msg ${msg.role}`}>
+            <div key={`${msg.role}-${i}`} className={`msg ${msg.role}`}>
               <div className="msg-label">
                 {msg.role === "user" ? "You" : "Horizons AI"}
               </div>
@@ -141,7 +245,6 @@ onResult?.(parsed);
             </div>
           ))}
 
-          {/* Typing indicator */}
           {loading && (
             <div className="msg ai">
               <div className="msg-label">Horizons AI</div>
@@ -154,16 +257,14 @@ onResult?.(parsed);
           )}
         </div>
 
-        {/* Suggestions */}
         <div className="suggestions">
           {suggestions.map((s, i) => (
-            <button key={i} onClick={() => sendMessage(s)}>
+            <button key={i} onClick={() => sendMessage(s)} type="button">
               {s}
             </button>
           ))}
         </div>
 
-        {/* Input */}
         <div className="chat-input-area">
           <input
             id="chatInput"
@@ -178,11 +279,12 @@ onResult?.(parsed);
             className="chat-send"
             onClick={() => sendMessage()}
             disabled={loading}
+            type="button"
+            aria-label="Send trip prompt"
           >
-            ➤
+            <Send size={18} />
           </button>
         </div>
-
       </div>
     </section>
   );

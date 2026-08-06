@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { ArrowRight, CheckCircle2, MapPin, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { FALLBACK_IMAGES, handleImageError } from "../utils/imageUtils";
+
+const MotionDiv = motion.div;
 
 export default function Hero({ onStart }) {
   const [input, setInput] = useState("");
@@ -10,91 +15,102 @@ export default function Hero({ onStart }) {
 
   return (
     <section id="hero">
-
-      {/* Background elements */}
-      <div className="hero-bg"></div>
-      <div className="hero-grid"></div>
-
-      {/* Content */}
-      <div className="hero-content">
-
-        <div className="hero-eyebrow">
-          AI-Powered Travel Intelligence
-        </div>
-
-        <h1 className="hero-title">
-          Travel beyond<br />
-          the <em>ordinary.</em>
-        </h1>
-
-        <p className="hero-subtitle">
-          Tell us your dream destination. Our AI crafts a bespoke itinerary —
-          complete with hidden gems, local experiences, and seamless logistics —
-          in seconds.
-        </p>
-
-        {/* Planner input */}
-        <div className="hero-planner">
-
-          <div className="planner-label">
-            ✦ Where would you like to go?
-          </div>
-
-          <div className="planner-input-row">
-
-            <input
-              className="planner-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. 7 days in Kyoto with a focus on temples and food…"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleStart();
-              }}
-            />
-
-            <button
-              className="planner-btn"
-              onClick={handleStart}
-            >
-              Plan Now
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* Info tags */}
-        <div
-          style={{
-            marginTop: "1.5rem",
-            display: "flex",
-            gap: "1.5rem",
-            flexWrap: "wrap",
-            opacity: 0,
-            animation: "fadeUp 1s 1s forwards"
-          }}
+      <div className="hero-shell">
+        <MotionDiv
+          className="hero-content"
+          initial={{ opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55 }}
         >
-          <span style={{ fontSize: "0.75rem", color: "var(--mist)" }}>
-            ✦ No signup required
-          </span>
+          <div className="hero-eyebrow">
+            <Sparkles size={16} />
+            AI-powered travel intelligence
+          </div>
 
-          <span style={{ fontSize: "0.75rem", color: "var(--mist)" }}>
-            ✦ Instant results
-          </span>
+          <h1 className="hero-title">
+            Plan Your Perfect Trip with <em>AI</em>
+          </h1>
 
-          <span style={{ fontSize: "0.75rem", color: "var(--mist)" }}>
-            ✦ Fully customizable
-          </span>
-        </div>
+          <p className="hero-subtitle">
+            Create personalized itineraries based on your destination, budget and travel preferences.
+          </p>
 
+          <div className="hero-actions">
+            <a className="btn-primary" href="#planner">
+              Start planning
+              <ArrowRight size={18} />
+            </a>
+            <a className="btn-secondary" href="#destinations">
+              Explore places
+            </a>
+          </div>
+
+          <div className="hero-planner" aria-label="Quick trip prompt">
+            <label className="planner-label" htmlFor="hero-trip-input">
+              Where would you like to go?
+            </label>
+
+            <div className="planner-input-row">
+              <input
+                id="hero-trip-input"
+                className="planner-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="7 days in Kyoto with temples and food"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleStart();
+                }}
+              />
+
+              <button
+                className="planner-btn"
+                onClick={handleStart}
+                type="button"
+              >
+                Generate
+              </button>
+            </div>
+          </div>
+
+          <div className="hero-trust">
+            {["No signup required", "Instant AI itinerary", "Budget-aware"].map(item => (
+              <span key={item}>
+                <CheckCircle2 size={16} />
+                {item}
+              </span>
+            ))}
+          </div>
+        </MotionDiv>
+
+        <MotionDiv
+          className="hero-visual"
+          initial={{ opacity: 0, x: 26 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.65, delay: 0.12 }}
+        >
+          <div className="hero-image-card">
+            <img
+              src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1100&q=85"
+              alt="A bright scenic travel destination"
+              onError={(e) => handleImageError(e, FALLBACK_IMAGES.destination)}
+            />
+          </div>
+
+          <div className="floating-card ai-card">
+            <span>AI Recommendation</span>
+            <strong>Best time to visit</strong>
+            <p>April - June</p>
+          </div>
+
+          <div className="floating-card route-card">
+            <MapPin size={18} />
+            <div>
+              <strong>Balanced route</strong>
+              <p>Food, culture, hidden gems</p>
+            </div>
+          </div>
+        </MotionDiv>
       </div>
-
-      {/* Scroll hint */}
-      <div className="scroll-hint">
-        <div className="scroll-line"></div>
-        Scroll to explore
-      </div>
-
     </section>
   );
 }

@@ -11,6 +11,7 @@ import Stats from "./components/Stats";
 import HowItWorks from "./components/HowItWorks";
 import Testimonials from "./components/Testimonials";
 import CTA from "./components/CTA";
+import ChatWidget from "./components/ChatWidget";
 import Footer from "./components/Footer";
 import useReveal from "./hooks/useReveal";
 import Map from "./components/Map";
@@ -49,7 +50,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Navbar />
+      <Navbar itinerary={itinerary} />
       <Hero onStart={handleHeroStart} />
       <Stats />
       <HowItWorks />
@@ -67,6 +68,7 @@ export default function App() {
       {itinerary && <Itinerary data={itinerary} onPlan={handlePlan} />}
       <Testimonials />
       <CTA />
+      <ChatWidget onResult={setItinerary} />
       <Footer />
     </div>
   );

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
+import { FALLBACK_IMAGES, isValidImageUrl } from "../utils/imageUtils";
 
 export default function ItineraryHero({
   destination,
   imagePrompt,
 }) {
   const [background, setBackground] =
-    useState("");
+    useState(FALLBACK_IMAGES.destination);
 
   const [loading, setLoading] =
     useState(true);
@@ -13,27 +15,28 @@ export default function ItineraryHero({
   useEffect(() => {
     async function fetchImage() {
       try {
+        const query = imagePrompt || destination || "travel landscape";
         const response = await fetch(
-          `http://localhost:5000/api/images?query=${encodeURIComponent(
-            imagePrompt
-          )}`
+          apiUrl(`/api/images?query=${encodeURIComponent(query)}`)
         );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
-        setBackground(data.imageUrl);
+        if (data.imageUrl && isValidImageUrl(data.imageUrl)) {
+          setBackground(data.imageUrl);
+        } else {
+          setBackground(FALLBACK_IMAGES.destination);
+        }
       } catch (error) {
         console.error(error);
+        setBackground(FALLBACK_IMAGES.destination);
       } finally {
         setLoading(false);
       }
     }
 
-    if (imagePrompt) {
-      fetchImage();
-    }
-  }, [imagePrompt]);
+    fetchImage();
+  }, [destination, imagePrompt]);
 
   return (
     <div
@@ -59,4 +62,4 @@ export default function ItineraryHero({
       </div>
     </div>
   );
-}
+}
