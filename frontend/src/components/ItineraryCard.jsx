@@ -36,27 +36,27 @@ export default function ItineraryCard({ activity, index, destination }) {
     activity?.img ||
     activity?.src;
 
-  const initialImage = isValidImageUrl(directImage)
-    ? directImage
-    : getValidImageUrl(activity, "culture");
-
-  const [cardImage, setCardImage] = useState(initialImage);
-
   const searchQuery = buildActivitySearchQuery(activity, destination);
+  const cacheKey = searchQuery?.toLowerCase().trim();
+  const fallbackImage = getValidImageUrl(activity, "culture");
+  const directImageIsValid = isValidImageUrl(directImage);
+
+  const [cardImage, setCardImage] = useState(() => (
+    cacheKey && clientImageCache.has(cacheKey)
+      ? clientImageCache.get(cacheKey)
+      : fallbackImage
+  ));
+
+  const displayImage = directImageIsValid ? directImage : cardImage;
 
   useEffect(() => {
-    // If activity already has an explicit direct image URL, use it
-    if (isValidImageUrl(directImage)) {
-      setCardImage(directImage);
-      return;
-    }
-
-    if (!searchQuery) return;
+    if (directImageIsValid || !searchQuery) return;
 
     // Check client-side memory cache first
-    const cacheKey = searchQuery.toLowerCase().trim();
     if (clientImageCache.has(cacheKey)) {
-      setCardImage(clientImageCache.get(cacheKey));
+      Promise.resolve().then(() => {
+        setCardImage(clientImageCache.get(cacheKey));
+      });
       return;
     }
 
@@ -83,7 +83,7 @@ export default function ItineraryCard({ activity, index, destination }) {
     return () => {
       isMounted = false;
     };
-  }, [searchQuery, directImage]);
+  }, [searchQuery, cacheKey, directImageIsValid]);
 
   return (
     <MotionArticle
@@ -95,7 +95,7 @@ export default function ItineraryCard({ activity, index, destination }) {
     >
       <div className="itinerary-card-media">
         <img
-          src={cardImage}
+          src={displayImage}
           alt={title}
           loading="lazy"
           onError={(e) => handleImageError(e, FALLBACK_IMAGES.culture)}

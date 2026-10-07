@@ -4,7 +4,7 @@ import {
 } from 'react';
 
 import { supabase } from '../lib/supabase';
-import { AuthContext } from './authContext';
+import { AuthContext } from './useAuth';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -66,6 +66,7 @@ export const AuthProvider = ({ children }) => {
           data: {
             full_name: fullName,
           },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
@@ -150,7 +151,7 @@ export const AuthProvider = ({ children }) => {
       const { error } = await supabase.auth.resetPasswordForEmail(
         email,
         {
-          redirectTo: 'http://localhost:5173/update-password',
+          redirectTo: `${window.location.origin}/update-password`,
         }
       );
 
@@ -173,9 +174,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // =========================
-  // Update Profile
+  // Update User Metadata
   // =========================
-  const updateProfile = async (updates) => {
+  const updateUserMetadata = async (updates) => {
     try {
       const { data, error } = await supabase.auth.updateUser({
         data: updates,
@@ -204,7 +205,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     resetPassword,
-    updateProfile,
+    updateUserMetadata,
     isAuthenticated: !!user,
   };
 

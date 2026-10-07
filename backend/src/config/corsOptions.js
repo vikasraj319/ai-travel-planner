@@ -9,7 +9,8 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
+    // Deny silently (no CORS headers) instead of throwing a 500
+    return callback(null, false);
   },
   credentials: true
 };

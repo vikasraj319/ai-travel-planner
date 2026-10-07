@@ -1,9 +1,10 @@
-const { supabase } = require('../lib/supabase');
+const { supabase, createSupabaseForToken } = require('../lib/supabase');
 const { validateTrip, createTripModel } = require('../models/tripModel');
 const { generateText } = require('./aiService');
-const { buildMockReply, buildMockPlan } = require('./mockTravelService');
+const { buildMockReply } = require('./mockTravelService');
 const { CHAT_SYSTEM_PROMPT, PLAN_SYSTEM_PROMPT } = require('../constants/systemPrompts');
-const { normalizeHistory, buildTravelPlanPrompt } = require('../utils/promptBuilder');
+const { normalizeHistory, buildTravelPlanPrompt, normalizeText } = require('../utils/promptBuilder');
+const { extractTripData } = require('../utils/extractTripData');
 
 async function chatWithPlanner({ message, history = [] }) {
   const messages = [...normalizeHistory(history), { role: 'user', content: message }];
@@ -73,17 +74,53 @@ function enrichPlanWithImageQueries(plan) {
   return plan;
 }
 
+function extractTripDetails(payload = {}) {
+  const prompt = normalizeText(payload.prompt);
+  const parsed = prompt
+    ? extractTripData(prompt)
+    : { destination: 'Unknown', budget: 0, days: 1 };
+
+  const destination = normalizeText(payload.destination) || parsed.destination;
+
+  const durationMatch = normalizeText(payload.duration).match(/(\d+)/);
+  const days = durationMatch ? parseInt(durationMatch[1], 10) : parsed.days;
+
+  const budgetMatch = normalizeText(payload.budget).match(/(\d+)/);
+  const budget = budgetMatch
+    ? parseInt(budgetMatch[1], 10)
+    : (parsed.budget > 0 ? parsed.budget : null);
+
+  return { destination, budget, days };
+}
+
 async function generateTravelPlan(payload) {
+
   const userPrompt = buildTravelPlanPrompt(payload);
 
-  const prompt = `
-  ${PLAN_SYSTEM_PROMPT}
+  // Extracted from the user's request
+  const tripDetails = extractTripDetails(payload);
 
-  User request:
-  ${userPrompt}
-  `;
+  const prompt = `
+${PLAN_SYSTEM_PROMPT}
+
+User request:
+${userPrompt}
+
+Trip details:
+Destination: ${tripDetails.destination ?? "Not specified"}
+Budget: ${tripDetails.budget ?? "Not specified"}
+Days: ${tripDetails.days ?? "Not specified"}
+`;
+
   const history = normalizeHistory(payload.history);
-  const messages = [...history, { role: 'user', content: prompt }];
+
+  const messages = [
+    ...history,
+    {
+      role: "user",
+      content: prompt
+    }
+  ];
 
   const aiResult = await generateText({
     systemPrompt: PLAN_SYSTEM_PROMPT,
@@ -92,24 +129,20 @@ async function generateTravelPlan(payload) {
     temperature: 0.7
   });
 
-  console.log("===== AI RESULT =====");
-  console.log(JSON.stringify(aiResult, null, 2));
-  console.log("=====================");
-
   if (aiResult.ok && aiResult.text) {
-     let cleanText = aiResult.text;
 
-    cleanText = cleanText
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
+    let cleanText = aiResult.text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
       .trim();
+
     let parsedPlan;
 
     try {
 
       parsedPlan = JSON.parse(cleanText);
+
       parsedPlan = enrichPlanWithImageQueries(parsedPlan);
-      console.log(parsedPlan);
 
     } catch (err) {
 
@@ -127,46 +160,23 @@ async function generateTravelPlan(payload) {
 
     return {
       plan: parsedPlan,
+      tripDetails,
       source: aiResult.provider,
       usedFallback: false
     };
   }
 
   return {
-    plan: "AI is temporarily unavailable. Please try again later",
-    source: 'mock',
+    plan: null,
+    tripDetails,
+    source: "mock",
     usedFallback: true,
     error: aiResult.error
   };
 }
 
-async function createTrip(data) {
-  // 1. Validate input
-  validateTrip(data)
-
-  // 2. Generate AI itinerary
-  const itinerary = await generateTravelPlan(data)
-
-  // 3. Prepare trip object
-  const trip = {
-    ...createTripModel(data),
-    itinerary: JSON.stringify(itinerary)
-  }
-
-  // 4. Save to Supabase
-  const { data: result, error } = await supabase
-    .from('trips')
-    .insert([trip])
-    .select()
-
-  if (error) throw error
-
-  return result[0]
-}
-
-async function saveTrip(data, itinerary) {
+async function saveTrip(data, itinerary, accessToken) {
   try {
-
     validateTrip(data);
 
     const trip = {
@@ -177,7 +187,12 @@ async function saveTrip(data, itinerary) {
       itinerary
     };
 
-    const { data: result, error } = await supabase
+    // Scope the write to the end user's identity so RLS policies apply
+    const client = accessToken
+      ? createSupabaseForToken(accessToken)
+      : supabase;
+
+    const { data: result, error } = await client
       .from('trips')
       .insert([trip])
       .select();
@@ -200,6 +215,5 @@ async function saveTrip(data, itinerary) {
 module.exports = {
   chatWithPlanner,
   generateTravelPlan,
-  createTrip,
   saveTrip,
 };

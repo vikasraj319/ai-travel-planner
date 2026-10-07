@@ -6,11 +6,15 @@ function errorHandler(err, req, res, next) {
     if (err.details) console.error('Details:', err.details);
   }
 
+  // Only surface intentional client-facing messages (ApiError);
+  // never leak internals (DB errors, stack details) for 5xx
+  const isClientError = err.name === 'ApiError';
+
   res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal server error',
-    details: err.details || null,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    message: isClientError ? err.message : 'Internal server error',
+    details: isClientError ? (err.details || null) : null,
+    stack: process.env.NODE_ENV === 'development' && isClientError ? err.stack : undefined
   });
 }
 

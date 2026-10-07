@@ -17,10 +17,25 @@ import useReveal from "./hooks/useReveal";
 import Map from "./components/Map";
 import "./styles.css";
 
+function getItineraryLocation(itinerary) {
+  if (!itinerary || typeof itinerary !== "object") return "Kyoto";
+
+  return (
+    itinerary.destination ||
+    itinerary.location ||
+    itinerary.city ||
+    itinerary.place ||
+    itinerary.title ||
+    "Kyoto"
+  );
+}
+
 export default function App() {
   useReveal();
   const plannerRef = useRef();
   const [itinerary, setItinerary] = useState(null);
+  const [destinationSearch, setDestinationSearch] = useState("");
+
   useEffect(() => {
     if (itinerary) {
       document
@@ -32,6 +47,19 @@ export default function App() {
     }
   }, [itinerary]);
 
+  // Listen for destination searches dispatched from the Navbar
+  useEffect(() => {
+    function handleSearch(e) {
+      setDestinationSearch(e.detail || "");
+      document
+        .getElementById("destinations")
+        ?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    window.addEventListener("horizons:search", handleSearch);
+    return () => window.removeEventListener("horizons:search", handleSearch);
+  }, []);
+
   function handlePlan(text) {
     document
       .getElementById("planner")
@@ -40,18 +68,10 @@ export default function App() {
     plannerRef.current?.sendMessage(text);
   }
 
-  function handleHeroStart(text) {
-  document
-    .getElementById("planner")
-    ?.scrollIntoView({ behavior: "smooth" });
-
-  plannerRef.current?.sendMessage(text);
-}
-
   return (
     <div className="app">
       <Navbar itinerary={itinerary} />
-      <Hero onStart={handleHeroStart} />
+      <Hero onStart={handlePlan} />
       <Stats />
       <HowItWorks />
       <div id="planner" className="planner-section">
@@ -61,14 +81,14 @@ export default function App() {
         </div>
         {/* RIGHT */}
         <div className="planner-right">
-          <Map location={itinerary?.title || "Kyoto"} />
+          <Map location={getItineraryLocation(itinerary)} />
         </div>
       </div>
-      <Destinations onPlan={handlePlan} />
+      <Destinations onPlan={handlePlan} searchQuery={destinationSearch} />
       {itinerary && <Itinerary data={itinerary} onPlan={handlePlan} />}
       <Testimonials />
       <CTA />
-      <ChatWidget onResult={setItinerary} />
+      <ChatWidget />
       <Footer />
     </div>
   );

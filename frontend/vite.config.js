@@ -15,11 +15,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          motion: ['framer-motion'],
-          supabase: ['@supabase/supabase-js'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (id.includes('react-router-dom')) return 'router'
+          if (id.includes('framer-motion')) return 'motion'
+          if (id.includes('@supabase')) return 'supabase'
+          if (id.includes('react')) return 'vendor'
+          return 'vendor'
         },
       },
     },

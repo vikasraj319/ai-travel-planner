@@ -1,6 +1,7 @@
-const { saveTrip, createTrip, chatWithPlanner, generateTravelPlan } = require('../services/travelService.js');
+const { saveTrip, chatWithPlanner, generateTravelPlan } = require('../services/travelService.js');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTrips } = require("../services/tripService");
+const { ensureProfile } = require("../services/profileService");
 
 const postChat = asyncHandler(async (req, res) => {
   const result = await chatWithPlanner(req.validatedBody);
@@ -16,7 +17,7 @@ const postChat = asyncHandler(async (req, res) => {
       usedFallback: result.usedFallback
     }
   });
-});
+}); 
 
 const postTravelPlan = asyncHandler(async (req, res) => {
 
@@ -24,22 +25,31 @@ const postTravelPlan = asyncHandler(async (req, res) => {
 
   const plan = result.plan;
 
+  const isUsablePlan =
+    plan &&
+    typeof plan === "object" &&
+    !Array.isArray(plan);
+
   let savedTripId = null;
 
-  // Only save to DB if user is authenticated
-  if (req.user) {
-    const budgetTotal = plan.budget && typeof plan.budget === "object"
-      ? Object.values(plan.budget).reduce((sum, v) => sum + (Number(v) || 0), 0)
-      : Number(plan.budget) || 0;
+  if (req.user && isUsablePlan) {
 
     const tripData = {
-      destination: plan.destination || plan.title || "Unknown",
-      budget: budgetTotal,
-      days: plan.days?.length || 1,
+      destination: result.tripDetails.destination,
+      budget: result.tripDetails.budget,
+      days: result.tripDetails.days,
       user_id: req.user.id
     };
 
-    const savedTrip = await saveTrip(tripData, result.plan);
+    // trips.user_id -> profiles.id foreign key requires a profile row
+    await ensureProfile(req.user, req.accessToken);
+
+    const savedTrip = await saveTrip(
+      tripData,
+      result.plan,
+      req.accessToken
+    );
+
     savedTripId = savedTrip.id;
   }
 
@@ -54,22 +64,13 @@ const postTravelPlan = asyncHandler(async (req, res) => {
   });
 });
 
- const generateTrip = async (req, res) => {
-  try {
-    const trip = await createTrip(req.body)
-    res.status(201).json(trip)
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-}
-
-const fetchTrips = asyncHandler(
+ const fetchTrips = asyncHandler(
   async (req, res) => {
 
     const userId = req.user.id;
 
     const trips =
-      await getTrips(userId);
+      await getTrips(userId, req.accessToken);
 
     res.status(200).json({
       success: true,
@@ -83,6 +84,5 @@ const fetchTrips = asyncHandler(
 module.exports = {
   postChat,
   postTravelPlan,
-  fetchTrips,
-  generateTrip
+  fetchTrips
 };

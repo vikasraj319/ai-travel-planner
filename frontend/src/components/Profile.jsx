@@ -69,6 +69,10 @@ export default function Profile({ onClose }) {
 
       const data = await res.json();
 
+      if (res.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
       if (!res.ok) {
         throw new Error(data.message || "Failed to save profile");
       }

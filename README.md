@@ -16,28 +16,39 @@ ________________________________________
 🛠️ Tech Stack
 Frontend
 •	React
-•	TypeScript
+•	JavaScript (JSX)
 •	Tailwind CSS
-•	TanStack Router
-•	TanStack Query
+•	React Router
 •	Framer Motion
+•	Lucide Icons
 Backend / Services
-•	AI APIsgit rebase --skip
-git push
-•	Maps API
-•	Location Services
+•	Express (Node.js)
+•	Google Gemini AI
+•	Supabase (Auth + Database)
+•	Pexels Image API
 Development Tools
 •	Vite
+•	ESLint
 •	Git
 •	GitHub
 •	VS Code
 ________________________________________
 🚀 Installation
-Clone the repository
-Install dependencies:
-npm install
-Start the development server:
-npm run dev
+The repository is a monorepo with separate backend and frontend apps.
+
+Clone the repository and install all dependencies:
+npm run install:all
+
+Start the development servers (each in its own terminal):
+npm run dev:backend
+npm run dev:frontend
+
+Environment setup:
+1.	Copy frontend/.env.example to frontend/.env and fill in Supabase credentials.
+2.	Copy backend/.env.example to backend/.env and fill in Supabase, Gemini, and Pexels keys.
+
+Build the frontend for production:
+npm run build:frontend
 ________________________________________
 🧠 How It Works
 1.	User enters travel destination and preferences.

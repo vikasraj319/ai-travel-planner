@@ -40,6 +40,18 @@ const env = {
     apiKey: process.env.GEMINI_API_KEY || "",
     model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
   },
+
+  // Supabase
+  supabase: {
+    url:
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      "",
+    publishableKey:
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      "",
+  },
 };
 
 module.exports = env;

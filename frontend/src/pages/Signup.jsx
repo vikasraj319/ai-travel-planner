@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom';
 
 import { useAuth } from '../context/useAuth';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -65,6 +66,10 @@ const Signup = () => {
 
   return (
     <div className="login-page">
+
+      <div className="fixed top-4 right-4 z-[300]">
+        <ThemeToggle />
+      </div>
 
       {/* Card */}
       <div className="login-card">

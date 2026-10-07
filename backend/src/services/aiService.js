@@ -1,6 +1,17 @@
 const { GoogleGenAI } = require('@google/genai');
 const env = require('../config/env');
 
+function withTimeout(promise, ms) {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`AI request timed out after ${ms}ms`)),
+      ms
+    );
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
 async function callGemini({ systemPrompt, messages, maxTokens = 900, temperature = 0.7 }) {
   if (!env.gemini.apiKey) {
     return {
@@ -17,7 +28,7 @@ async function callGemini({ systemPrompt, messages, maxTokens = 900, temperature
       .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
       .join('\n');
 
-    const response = await ai.models.generateContent({
+    const request = ai.models.generateContent({
       model: env.gemini.model,
       contents: `${conversationText}`,
       config: {
@@ -26,6 +37,8 @@ async function callGemini({ systemPrompt, messages, maxTokens = 900, temperature
         maxOutputTokens: maxTokens
       }
     });
+
+    const response = await withTimeout(request, env.aiTimeoutMs);
 
     return {
       ok: true,

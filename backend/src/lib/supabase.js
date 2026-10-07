@@ -1,10 +1,8 @@
-const { configDotenv } = require('dotenv');
 const { createClient } = require('@supabase/supabase-js');
+const env = require('../config/env');
 
-configDotenv()
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+const supabaseUrl = env.supabase.url;
+const supabaseKey = env.supabase.publishableKey;
 
 function createSupabaseForToken(token) {
   return createClient(supabaseUrl, supabaseKey, {

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useState } from 'react';
 import Profile from "../components/Profile";
+import ThemeToggle from "../components/ThemeToggle";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showProfile, setShowProfile] = useState(false);
@@ -29,6 +30,11 @@ const Dashboard = () => {
 
       {/* Background Glow */}
       <div className="dashboard-bg" />
+
+      {/* Theme Toggle */}
+      <div className="fixed top-4 right-4 z-[300]">
+        <ThemeToggle />
+      </div>
 
       {/* Main Content */}
       <div className="dashboard-container">

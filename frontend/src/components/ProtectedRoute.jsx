@@ -1,8 +1,9 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   // =========================
   // Show Loading While Checking Auth
@@ -19,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
   // Redirect if User Not Logged In
   // =========================
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   // =========================

@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Bot, CalendarDays, Coins, MapPin, Send, Sparkles, UsersRound } from "lucide-react";
+import { Bot, CalendarDays, ChevronDown, Coins, MapPin, Mountain, Send, Sparkles, UsersRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { apiUrl } from "../lib/api";
 import { supabase } from "../lib/supabase";
@@ -102,30 +102,46 @@ const Planner = forwardRef(({ onResult }, ref) => {
         headers.Authorization = `Bearer ${session.access_token}`;
       }
 
+      // Provide prior turns so the AI can keep context across messages
+      const history = messages
+        .filter(m => m.role === "user" || m.role === "ai")
+        .slice(-10)
+        .map(m => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: m.text
+        }));
+
       const res = await fetch(apiUrl("/api/travel-plan"), {
         method: "POST",
         headers,
         body: JSON.stringify({
-          prompt: text
+          prompt: text,
+          history
         })
       });
 
       const data = await res.json();
-      console.log("FULL RESPONSE:", data);
-
       const parsed = data?.plan;
 
       if (!parsed) {
         throw new Error("No itinerary returned from server");
       }
 
-      console.log("PARSED:", parsed);
+      let summary;
+      if (typeof parsed === "string") {
+        summary = parsed;
+      } else if (parsed && typeof parsed === "object") {
+        summary = [parsed.title, parsed.overview]
+          .filter(Boolean)
+          .join(" — ");
+      }
+      summary = summary || "Your itinerary is ready.";
 
       setMessages(prev => [
         ...prev,
         {
           role: "ai",
-          text: "Your itinerary is ready."
+          text: summary
         }
       ]);
 
@@ -154,70 +170,94 @@ const Planner = forwardRef(({ onResult }, ref) => {
         viewport={{ once: true, amount: 0.25 }}
         transition={{ duration: 0.45 }}
       >
-        <div className="planner-card-header">
-          <span className="planner-icon"><Sparkles size={20} /></span>
+        <div className="planner-brand-header">
+          <span className="planner-brand-mark">
+            <Mountain size={26} fill="currentColor" />
+          </span>
           <div>
-            <p className="section-eyebrow">AI Trip Builder</p>
-            <h2>Tell us your travel style</h2>
+            <h3>Horizons AI</h3>
+            <p>Your next adventure, planned with AI</p>
           </div>
         </div>
 
-        <form className="trip-form" onSubmit={handleSubmit}>
-          <label className="floating-field">
-            <MapPin size={18} />
-            <input
-              name="destination"
-              value={formData.destination}
-              onChange={handleFieldChange}
-              placeholder=" "
-              required
-            />
-            <span>Destination</span>
-          </label>
+        <div className="planner-builder-panel">
+          <div className="planner-card-header">
+            <span className="planner-icon"><Sparkles size={20} /></span>
+            <div>
+              <p className="section-eyebrow">AI Trip Builder</p>
+              <h2>Tell us your travel style</h2>
+            </div>
+          </div>
 
-          <label className="floating-field">
-            <CalendarDays size={18} />
-            <input
-              name="days"
-              type="number"
-              min="1"
-              value={formData.days}
-              onChange={handleFieldChange}
-              placeholder=" "
-              required
-            />
-            <span>Number of Days</span>
-          </label>
+          <form className="trip-form" onSubmit={handleSubmit}>
+            <label className="floating-field">
+              <span className="field-icon"><MapPin size={20} /></span>
+              <span className="field-copy">
+                <span className="field-label">Destination</span>
+                <input
+                  name="destination"
+                  value={formData.destination}
+                  onChange={handleFieldChange}
+                  placeholder="Where to?"
+                  required
+                />
+              </span>
+              <ChevronDown className="field-chevron" size={17} />
+            </label>
 
-          <label className="floating-field">
-            <Coins size={18} />
-            <input
-              name="budget"
-              value={formData.budget}
-              onChange={handleFieldChange}
-              placeholder=" "
-            />
-            <span>Budget</span>
-          </label>
+            <label className="floating-field">
+              <span className="field-icon"><CalendarDays size={20} /></span>
+              <span className="field-copy">
+                <span className="field-label">Number of Days</span>
+                <input
+                  name="days"
+                  type="number"
+                  min="1"
+                  value={formData.days}
+                  onChange={handleFieldChange}
+                  placeholder="Select days"
+                  required
+                />
+              </span>
+              <ChevronDown className="field-chevron" size={17} />
+            </label>
 
-          <label className="floating-field">
-            <UsersRound size={18} />
-            <select name="style" value={formData.style} onChange={handleFieldChange}>
-              <option value="">Choose a style</option>
-              <option value="Relaxed">Relaxed</option>
-              <option value="Adventure">Adventure</option>
-              <option value="Culture and food">Culture and food</option>
-              <option value="Luxury">Luxury</option>
-              <option value="Family friendly">Family friendly</option>
-            </select>
-            <span>Travel Style</span>
-          </label>
+            <label className="floating-field">
+              <span className="field-icon"><Coins size={20} /></span>
+              <span className="field-copy">
+                <span className="field-label">Budget</span>
+                <input
+                  name="budget"
+                  value={formData.budget}
+                  onChange={handleFieldChange}
+                  placeholder="Choose budget"
+                />
+              </span>
+              <ChevronDown className="field-chevron" size={17} />
+            </label>
 
-          <button className="generate-trip-btn" type="submit" disabled={loading}>
-            {loading ? "Generating..." : "Generate Trip"}
-            <Send size={18} />
-          </button>
-        </form>
+            <label className="floating-field">
+              <span className="field-icon"><UsersRound size={20} /></span>
+              <span className="field-copy">
+                <span className="field-label">Travel Style</span>
+                <select name="style" value={formData.style} onChange={handleFieldChange}>
+                  <option value="">Choose a style</option>
+                  <option value="Relaxed">Relaxed</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Culture and food">Culture and food</option>
+                  <option value="Luxury">Luxury</option>
+                  <option value="Family friendly">Family friendly</option>
+                </select>
+              </span>
+              <ChevronDown className="field-chevron" size={17} />
+            </label>
+
+            <button className="generate-trip-btn" type="submit" disabled={loading}>
+              <Send size={18} />
+              {loading ? "Generating..." : "Generate Trip"}
+            </button>
+          </form>
+        </div>
       </MotionDiv>
 
       <div id="planner-chat" className="chat-container">

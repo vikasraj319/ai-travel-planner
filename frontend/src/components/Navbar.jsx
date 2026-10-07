@@ -22,6 +22,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/useAuth";
 import useSmartScroll from "../hooks/useSmartScroll";
+import ThemeToggle from "./ThemeToggle";
+
+const MotionAside = motion.aside;
+const MotionDiv = motion.div;
+const MotionForm = motion.form;
 
 export default function Navbar({ itinerary }) {
   const { isScrolled, isVisible, scrollProgress } = useSmartScroll(25);
@@ -82,11 +87,10 @@ export default function Navbar({ itinerary }) {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
-    // Scroll to destinations section or trigger search
-    const el = document.getElementById("destinations");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    // Dispatch so the app can filter destinations and scroll to the section
+    window.dispatchEvent(
+      new CustomEvent("horizons:search", { detail: searchQuery.trim() })
+    );
     setSearchOpen(false);
   }
 
@@ -155,7 +159,7 @@ export default function Navbar({ itinerary }) {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-slate-900 text-lg tracking-tight leading-none">
+                  <span className="font-extrabold text-slate-900 dark:text-slate-50 text-lg tracking-tight leading-none">
                     Horizons <span className="text-amber-500">AI</span>
                   </span>
                   <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100/80 text-amber-900 border border-amber-300/60 shadow-xs">
@@ -164,7 +168,7 @@ export default function Navbar({ itinerary }) {
                   </span>
                 </div>
                 {!isScrolled && (
-                  <span className="text-[11px] font-semibold text-slate-500 leading-tight transition-opacity duration-300">
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 leading-tight transition-opacity duration-300">
                     Smart Travel Concierge
                   </span>
                 )}
@@ -175,49 +179,49 @@ export default function Navbar({ itinerary }) {
           {/* CENTER: STANDARD NAVIGATION OR CONTEXTUAL SMART TRIP BAR */}
           {itinerary && isHome ? (
             /* CONTEXTUAL SMART TRIP BAR */
-            <div className="hidden lg:flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-full border border-slate-200/80 shadow-xs">
+            <div className="hidden lg:flex items-center gap-1.5 bg-slate-100/90 dark:bg-slate-800/90 p-1.5 rounded-full border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
               <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1 shadow-xs">
                 🏝 {itinerary.destination || itinerary.title || "Goa Trip"}
               </span>
 
               <a
                 href="#itinerary"
-                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-white transition-all"
+                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-all"
               >
                 Overview
               </a>
               <a
                 href="#itinerary"
-                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-white transition-all"
+                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-all"
               >
                 Schedule
               </a>
               <a
                 href="#planner"
-                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-white transition-all"
+                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-all"
               >
                 Map
               </a>
 
-              <div className="h-4 w-[1px] bg-slate-300 mx-1" />
+              <div className="h-4 w-[1px] bg-slate-300 dark:bg-slate-600 mx-1" />
 
               <button
                 onClick={handleShare}
                 type="button"
-                className="relative px-3 py-1 rounded-full text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-white transition-all flex items-center gap-1"
+                className="relative px-3 py-1 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-1"
                 aria-label="Share itinerary"
               >
-                <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>{copiedToast ? "Copied!" : "Share"}</span>
               </button>
 
               <button
                 onClick={handlePrint}
                 type="button"
-                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-white transition-all flex items-center gap-1"
+                className="px-3 py-1 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-1"
                 aria-label="Download or print PDF"
               >
-                <Printer className="w-3.5 h-3.5 text-slate-500" />
+                <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>PDF</span>
               </button>
             </div>
@@ -239,12 +243,12 @@ export default function Navbar({ itinerary }) {
                     className={`relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 ${
                       isActive
                         ? "text-amber-950 font-bold bg-amber-400/90 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
                     }`}
                   >
                     {link.name}
                     {isActive && (
-                      <motion.div
+                      <MotionDiv
                         layoutId="navPill"
                         className="absolute inset-0 bg-amber-400 rounded-full -z-10 shadow-xs"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
@@ -256,13 +260,15 @@ export default function Navbar({ itinerary }) {
             </div>
           )}
 
-          {/* RIGHT: SEARCH, AUTH / USER DROPDOWN, MOBILE HAMBURGER */}
+          {/* RIGHT: SEARCH, THEME, AUTH / USER DROPDOWN, MOBILE HAMBURGER */}
           <div className="flex items-center gap-2.5">
+            <ThemeToggle />
+
             {/* SEARCH EXPANDABLE INPUT */}
             <div className="relative flex items-center">
               <AnimatePresence>
                 {searchOpen ? (
-                  <motion.form
+                  <MotionForm
                     initial={{ width: 0, opacity: 0 }}
                     animate={{ width: 220, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
@@ -276,21 +282,21 @@ export default function Navbar({ itinerary }) {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search destinations..."
-                      className="w-full h-9 pl-3 pr-8 text-xs font-medium text-slate-800 bg-slate-100 border border-slate-300/80 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+                      className="w-full h-9 pl-3 pr-8 text-xs font-medium text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 border border-slate-300/80 dark:border-slate-600/80 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-400/60"
                       onBlur={() => !searchQuery && setSearchOpen(false)}
                     />
                     <button
                       type="submit"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                     >
                       <Search className="w-3.5 h-3.5" />
                     </button>
-                  </motion.form>
+                  </MotionForm>
                 ) : (
                   <button
                     onClick={() => setSearchOpen(true)}
                     type="button"
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 transition-all hover:scale-105 active:scale-95"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition-all hover:scale-105 active:scale-95"
                     aria-label="Search destinations"
                   >
                     <Search className="w-4 h-4" />
@@ -305,7 +311,7 @@ export default function Navbar({ itinerary }) {
                 <button
                   onClick={() => setUserDropdownOpen((prev) => !prev)}
                   type="button"
-                  className="flex items-center gap-2 p-1 pl-1 pr-3 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all hover:scale-[1.03] active:scale-95 shadow-md"
+                  className="flex items-center gap-2 p-1 pl-1 pr-3 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 transition-all hover:scale-[1.03] active:scale-95 shadow-md"
                   aria-expanded={userDropdownOpen}
                   aria-label="User account menu"
                 >
@@ -321,24 +327,24 @@ export default function Navbar({ itinerary }) {
                 {/* USER DROPDOWN MENU */}
                 <AnimatePresence>
                   {userDropdownOpen && (
-                    <motion.div
+                    <MotionDiv
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.18 }}
-                      className="absolute right-0 mt-3 w-56 p-2 bg-white border border-slate-200/90 rounded-2xl shadow-2xl shadow-slate-900/15 backdrop-blur-xl z-[110]"
+                      className="absolute right-0 mt-3 w-56 p-2 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/90 rounded-2xl shadow-2xl shadow-slate-900/15 backdrop-blur-xl z-[110]"
                     >
-                      <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                        <p className="text-xs font-bold text-slate-900 truncate">
+                      <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                        <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
                           {user.user_metadata?.full_name || "Traveler"}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
                       </div>
 
                       <Link
                         to="/dashboard"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100 rounded-xl transition-all"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
                       >
                         <User className="w-4 h-4 text-amber-500" />
                         <span>Workspace Dashboard</span>
@@ -347,13 +353,13 @@ export default function Navbar({ itinerary }) {
                       <Link
                         to="/saved-trips"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100 rounded-xl transition-all"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
                       >
                         <Bookmark className="w-4 h-4 text-amber-500" />
                         <span>Saved Trips Collection</span>
                       </Link>
 
-                      <div className="my-1 border-t border-slate-100" />
+                      <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
                       <button
                         onClick={async () => {
@@ -362,12 +368,12 @@ export default function Navbar({ itinerary }) {
                           navigate("/login");
                         }}
                         type="button"
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-all"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
                       </button>
-                    </motion.div>
+                    </MotionDiv>
                   )}
                 </AnimatePresence>
               </div>
@@ -385,7 +391,7 @@ export default function Navbar({ itinerary }) {
             <button
               onClick={() => setMenuOpen(true)}
               type="button"
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all active:scale-95"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 transition-all active:scale-95"
               aria-label="Open navigation drawer"
             >
               <Menu className="w-5 h-5" />
@@ -399,7 +405,7 @@ export default function Navbar({ itinerary }) {
         {menuOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -408,35 +414,38 @@ export default function Navbar({ itinerary }) {
             />
 
             {/* Slide-out drawer */}
-            <motion.aside
+            <MotionAside
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 350, damping: 32 }}
-              className="fixed top-0 right-0 bottom-0 w-[82vw] max-w-sm bg-white/95 backdrop-blur-2xl border-l border-white/80 p-6 z-[160] shadow-2xl flex flex-col justify-between rounded-l-3xl md:hidden"
+              className="fixed top-0 right-0 bottom-0 w-[82vw] max-w-sm bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-l border-white/80 dark:border-slate-800 p-6 z-[160] shadow-2xl flex flex-col justify-between rounded-l-3xl md:hidden"
             >
               <div>
-                <div className="flex items-center justify-between pb-6 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-bold">
                       <Plane className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="font-extrabold text-slate-900 text-base">Horizons AI</span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-50 text-base">Horizons AI</span>
                       <span className="block text-[10px] text-amber-600 font-bold uppercase tracking-wider">
                         ✨ AI Powered Planner
                       </span>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setMenuOpen(false)}
-                    type="button"
-                    className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200"
-                    aria-label="Close menu"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <button
+                      onClick={() => setMenuOpen(false)}
+                      type="button"
+                      className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700"
+                      aria-label="Close menu"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Mobile Search */}
@@ -447,7 +456,7 @@ export default function Navbar({ itinerary }) {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search destinations..."
-                      className="w-full h-10 pl-3 pr-9 text-xs font-medium bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full h-10 pl-3 pr-9 text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400"
                     />
                     <button
                       type="submit"
@@ -471,23 +480,23 @@ export default function Navbar({ itinerary }) {
                       key={link.name}
                       href={link.href}
                       onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 rounded-2xl text-sm font-semibold text-slate-800 hover:bg-amber-50 hover:text-amber-950 transition-all flex items-center justify-between"
+                      className="px-4 py-3 rounded-2xl text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-950 dark:hover:text-amber-300 transition-all flex items-center justify-between"
                     >
                       <span>{link.name}</span>
-                      <ArrowRight className="w-4 h-4 text-slate-300" />
+                      <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                     </a>
                   ))}
                 </div>
               </div>
 
               {/* Mobile Footer Auth */}
-              <div className="pt-6 border-t border-slate-100">
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                 {user ? (
                   <div className="flex flex-col gap-2">
                     <Link
                       to="/dashboard"
                       onClick={() => setMenuOpen(false)}
-                      className="w-full py-3 text-center text-xs font-bold bg-slate-900 text-white rounded-2xl shadow-md"
+                      className="w-full py-3 text-center text-xs font-bold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-2xl shadow-md"
                     >
                       Workspace Dashboard
                     </Link>
@@ -498,7 +507,7 @@ export default function Navbar({ itinerary }) {
                         navigate("/login");
                       }}
                       type="button"
-                      className="w-full py-3 text-center text-xs font-bold text-rose-600 bg-rose-50 rounded-2xl"
+                      className="w-full py-3 text-center text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/60 rounded-2xl"
                     >
                       Sign Out
                     </button>
@@ -514,7 +523,7 @@ export default function Navbar({ itinerary }) {
                   </Link>
                 )}
               </div>
-            </motion.aside>
+            </MotionAside>
           </>
         )}
       </AnimatePresence>

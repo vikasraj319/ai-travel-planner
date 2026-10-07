@@ -54,12 +54,18 @@ const DESTINATIONS = [
   }
 ];
 
-export default function Destinations({ onPlan }) {
+export default function Destinations({ onPlan, searchQuery = "" }) {
   const [filter, setFilter] = useState("all");
 
-  const filtered = DESTINATIONS.filter(d =>
-    filter === "all" ? true : d.region === filter
-  );
+  const query = searchQuery.toLowerCase().trim();
+
+  const filtered = DESTINATIONS.filter(d => {
+    if (query) {
+      const haystack = `${d.name} ${d.full} ${d.tag} ${d.description}`.toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    return filter === "all" ? true : d.region === filter;
+  });
 
   return (
     <section id="destinations">
@@ -84,9 +90,13 @@ export default function Destinations({ onPlan }) {
       </div>
 
       <div className="dest-grid">
-        {filtered.map((d) => (
-          <DestinationCard key={d.full} data={d} onPlan={onPlan} />
-        ))}
+        {filtered.length > 0 ? (
+          filtered.map((d) => (
+            <DestinationCard key={d.full} data={d} onPlan={onPlan} />
+          ))
+        ) : (
+          <p className="itin-empty">No destinations match your search.</p>
+        )}
       </div>
     </section>
   );

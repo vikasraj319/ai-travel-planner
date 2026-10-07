@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { apiUrl } from "../lib/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function SavedTrips() {
 
@@ -9,13 +10,7 @@ export default function SavedTrips() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-
-    fetchTrips();
-
-  }, []);
-
-  async function fetchTrips() {
+  const fetchTrips = useCallback(async () => {
     try {
       const {
       data: { session }
@@ -41,8 +36,14 @@ export default function SavedTrips() {
 
       }
     );
+
+    if (res.status === 401) {
+      // Session expired or revoked - send user to login
+      navigate("/login", { replace: true });
+      return;
+    }
+
       const data = await res.json();
-      console.log("FETCHED:", data);
       setTrips(
         data.trips ||
         data.data ||
@@ -54,10 +55,21 @@ export default function SavedTrips() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [navigate]);
+
+  useEffect(() => {
+
+    fetchTrips();
+
+  }, [fetchTrips]);
 
   return (
     <div className="saved-trips-page">
+
+      {/* THEME TOGGLE */}
+      <div className="fixed top-4 right-4 z-[300]">
+        <ThemeToggle />
+      </div>
 
       {/* HEADER */}
       <div className="saved-top">

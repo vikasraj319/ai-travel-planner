@@ -2,10 +2,6 @@ const { saveProfile } = require('../services/profileService');
 
 const createProfile = async (req, res) => {
   try {
-
-    console.log("USER:", req.user);
-    console.log("BODY:", req.body);
-
     const profileData = {
       id: req.user.id,
       username: req.body.username,
@@ -30,7 +26,7 @@ const createProfile = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: err.message
+      message: "Failed to save profile"
     });
   }
 };

@@ -2,19 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { Bot, Send, Sparkles, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { apiUrl } from "../lib/api";
-import { supabase } from "../lib/supabase";
 
 const MotionSection = motion.section;
 const MotionButton = motion.button;
 
-export default function ChatWidget({ onResult }) {
+export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: "ai",
-      text: "Hi, I can help refine a trip idea or generate a fresh itinerary."
+      text: "Hi, I can help refine a trip idea or answer questions about a destination."
     }
   ]);
   const messagesRef = useRef(null);
@@ -35,41 +34,38 @@ export default function ChatWidget({ onResult }) {
     setLoading(true);
 
     try {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession();
+      // Provide prior turns so the AI can keep context across messages
+      const history = messages
+        .filter(m => m.role === "user" || m.role === "ai")
+        .map(m => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: m.text
+        }));
 
-      const headers = {
-        "Content-Type": "application/json"
-      };
-
-      if (session?.access_token) {
-        headers.Authorization = `Bearer ${session.access_token}`;
-      }
-
-      const res = await fetch(apiUrl("/api/travel-plan"), {
+      const res = await fetch(apiUrl("/api/chat"), {
         method: "POST",
-        headers,
-        body: JSON.stringify({ prompt: text })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: text, history })
       });
 
       const data = await res.json();
-      const parsed = data?.plan;
+      const reply = data?.data?.reply;
 
-      if (!parsed) {
-        throw new Error("No itinerary returned from server");
+      if (!reply) {
+        throw new Error("No reply returned from server");
       }
 
       setMessages(prev => [
         ...prev,
-        { role: "ai", text: "Done. I generated an itinerary and opened it below." }
+        { role: "ai", text: reply }
       ]);
-      onResult?.(parsed);
     } catch (err) {
       console.error(err);
       setMessages(prev => [
         ...prev,
-        { role: "ai", text: "I could not generate that right now. Please try again." }
+        { role: "ai", text: "I could not answer that right now. Please try again." }
       ]);
     } finally {
       setLoading(false);

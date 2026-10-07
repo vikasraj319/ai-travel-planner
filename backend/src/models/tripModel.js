@@ -1,36 +1,59 @@
-
- function validateTrip(trip) {
-
-  // Auto fallback budget
+function validateTrip(trip) {
+  // Budget
   if (
-    trip.budget === undefined ||
-    trip.budget === null ||
-    trip.budget === ""
+    trip.budget !== undefined &&
+    trip.budget !== null &&
+    trip.budget !== ""
   ) {
-    trip.budget = 0;
+    trip.budget = Number(trip.budget);
+
+    if (Number.isNaN(trip.budget)) {
+      throw new Error("Invalid budget");
+    }
+  } else {
+    trip.budget = null;
   }
 
-  // Convert string → number
-  trip.budget = Number(trip.budget);
+  // Days
+  if (
+    trip.days !== undefined &&
+    trip.days !== null &&
+    trip.days !== ""
+  ) {
+    trip.days = Number(trip.days);
 
-  // Final validation
-  if (isNaN(trip.budget)) {
-    throw new Error("Invalid budget");
+    if (!Number.isInteger(trip.days) || trip.days <= 0) {
+      throw new Error("Invalid number of days");
+    }
+  } else {
+    trip.days = null;
   }
 
+  // Destination
+  if (
+    trip.destination !== undefined &&
+    trip.destination !== null &&
+    trip.destination !== ""
+  ) {
+    trip.destination = String(trip.destination).trim();
+  } else {
+    trip.destination = null;
+  }
 }
+
 
 function createTripModel(data) {
   return {
-    user_id: data.user_id,
-    destination: data.destination,
-    budget: Number(data.budget),
-    days: Number(data.days),
+    user_id: data.user_id ?? null,
+    destination: data.destination ?? null,
+    budget: data.budget ?? null,
+    days: data.days ?? null,
     created_at: new Date()
-  }
+  };
 }
+
 
 module.exports = {
   validateTrip,
-  createTripModel 
-}
+  createTripModel
+};

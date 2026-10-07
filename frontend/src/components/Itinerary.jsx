@@ -8,19 +8,142 @@ function toArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function parseTextItinerary(text) {
+  if (!text || typeof text !== "string") return [];
+
+  const sections = text
+    .split(/(?=Day\s+\d+\s*:)/gi)
+    .map(section => section.trim())
+    .filter(section => /^Day\s+\d+\s*:/i.test(section));
+
+  return sections.map((section, index) => {
+    const [, dayValue, rest = ""] = section.match(/^Day\s+(\d+)\s*:\s*([\s\S]*)$/i) || [];
+    const dayNumber = Number(dayValue) || index + 1;
+    const lines = rest
+      .split(/\n+/)
+      .map(line => line.replace(/^[-*•✦]\s*/, "").trim())
+      .filter(Boolean);
+
+    const title = lines[0]?.slice(0, 80) || `Day ${dayNumber}`;
+    const activities = (lines.length ? lines : [rest])
+      .flatMap(line => line.split(/(?<=\.)\s+(?=[A-Z])/))
+      .map(item => item.trim())
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((item, activityIndex) => ({
+        time: activityIndex === 0 ? "Morning" : activityIndex === 1 ? "Afternoon" : "Evening",
+        activity: item.replace(/\.$/, ""),
+        description: item
+      }));
+
+    return {
+      day: dayNumber,
+      title,
+      activities
+    };
+  });
+}
+
+function normalizeDays(value) {
+  if (typeof value === "string") {
+    return parseTextItinerary(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((day, index) => {
+      if (typeof day === "string") {
+        return {
+          day: index + 1,
+          title: `Day ${index + 1}`,
+          activities: parseTextItinerary(`Day ${index + 1}: ${day}`)[0]?.activities || [
+            { time: "", activity: day }
+          ]
+        };
+      }
+
+      if (!day || typeof day !== "object") {
+        return {
+          day: index + 1,
+          title: `Day ${index + 1}`,
+          activities: []
+        };
+      }
+
+      const rawActivities =
+        day.activities ||
+        day.schedule ||
+        day.items ||
+        day.plan ||
+        day.events ||
+        [];
+
+      return {
+        ...day,
+        day: day.day ?? day.dayNumber ?? index + 1,
+        title: day.title || day.name || `Day ${day.day ?? index + 1}`,
+        activities: typeof rawActivities === "string"
+          ? parseTextItinerary(`Day ${index + 1}: ${rawActivities}`)[0]?.activities || [
+              { time: "", activity: rawActivities }
+            ]
+          : toArray(rawActivities)
+      };
+    });
+  }
+
+  if (value && typeof value === "object") {
+    return Object.entries(value).map(([key, day], index) => ({
+      day: Number(key.replace(/\D/g, "")) || index + 1,
+      title: key,
+      activities: typeof day === "string"
+        ? parseTextItinerary(`Day ${index + 1}: ${day}`)[0]?.activities || [
+            { time: "", activity: day }
+          ]
+        : toArray(day?.activities || day?.schedule || day?.items || day)
+    }));
+  }
+
+  return [];
+}
+
 function normalizePlan(data) {
-  if (typeof data === "string") {
+  const unwrapped = data?.plan || data?.itinerary || data;
+
+  if (typeof unwrapped === "string") {
     return {
       title: "Generated Itinerary",
-      overview: data,
-      days: [],
+      overview: unwrapped,
+      days: parseTextItinerary(unwrapped),
       food: [],
       tips: [],
       budget: {}
     };
   }
 
-  return data || {};
+  if (!unwrapped || typeof unwrapped !== "object") return {};
+
+  const days = normalizeDays(
+    unwrapped.days ||
+    unwrapped.itinerary ||
+    unwrapped.schedule ||
+    unwrapped.dayByDay ||
+    unwrapped.dailyPlan
+  );
+
+  return {
+    ...unwrapped,
+    destination:
+      unwrapped.destination ||
+      unwrapped.location ||
+      unwrapped.city ||
+      unwrapped.place ||
+      "",
+    overview:
+      unwrapped.overview ||
+      unwrapped.summary ||
+      unwrapped.description ||
+      "",
+    days
+  };
 }
 
 function normalizeActivity(activity) {
@@ -63,7 +186,7 @@ export default function Itinerary({ data, onPlan }) {
     loadImage();
   }, [searchQuery]);
 
-  const days = toArray(plan.days);
+  const days = normalizeDays(plan.days);
   const food = toArray(plan.food);
   const tips = toArray(plan.tips);
   const budget = plan.budget && typeof plan.budget === "object"
@@ -72,7 +195,7 @@ export default function Itinerary({ data, onPlan }) {
 
   const safeActiveDayIndex = days[activeDayIndex] ? activeDayIndex : 0;
   const activeDay = days[safeActiveDayIndex] || days[0];
-  const activeActivities = toArray(activeDay?.activities).map(normalizeActivity);
+  const activeActivities = normalizeDays([activeDay])[0]?.activities.map(normalizeActivity) || [];
 
   const budgetItems = [
     ["Stay", budget.stay],
@@ -195,7 +318,7 @@ export default function Itinerary({ data, onPlan }) {
                 </div>
                 <ul className="itin-tips">
                   {tips.map((tip, index) => (
-                    <li key={`${tip}-${index}`}>{tip}</li>
+                    <li key={`${tip}-${index}`}>➤ {tip}</li>
                   ))}
                 </ul>
               </div>

@@ -1,6 +1,6 @@
-import { useContext } from 'react';
+import { createContext, useContext } from 'react';
 
-import { AuthContext } from './authContext';
+export const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

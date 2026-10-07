@@ -40,9 +40,9 @@ async function authenticateUser(
 
     } catch (err) {
       console.error('Auth middleware error:', err);
-      res.status(500).json({
+      res.status(503).json({
         success: false,
-        message: "Supabase authentication service error"
+        message: "Authentication service unavailable"
       });
     }
 }
@@ -50,21 +50,15 @@ async function authenticateUser(
 async function optionalAuthenticateUser(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
+
+    // Optional auth: any missing/malformed header just means "anonymous"
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next();
     }
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid Authorization header format"
-      });
-    }
+
     const token = authHeader.split(' ')[1];
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token"
-      });
+      return next();
     }
 
     const {
@@ -72,11 +66,10 @@ async function optionalAuthenticateUser(req, res, next) {
       error
     } = await supabase.auth.getUser(token);
 
-    if (error || !data.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token"
-      });
+    // Optional auth: stale/invalid tokens fall back to anonymous
+    // instead of failing the whole request with 401
+    if (error || !data || !data.user) {
+      return next();
     }
 
     req.user = data.user;
@@ -85,10 +78,8 @@ async function optionalAuthenticateUser(req, res, next) {
     return next();
   } catch (err) {
     console.error('Optional auth middleware error:', err);
-    return res.status(500).json({
-      success: false,
-      message: "Supabase authentication service error"
-    });
+    // Supabase unreachable: do not block anonymous requests
+    return next();
   }
 }
 

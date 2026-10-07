@@ -2,13 +2,16 @@ import { useState } from 'react';
 
 import {
   Link,
+  useLocation,
   useNavigate,
 } from 'react-router-dom';
 
 import { useAuth } from '../context/useAuth';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { login } = useAuth();
 
@@ -44,11 +47,16 @@ const Login = () => {
       return;
     }
 
-    navigate('/dashboard');
+    const from = location.state?.from?.pathname || '/dashboard';
+    navigate(from, { replace: true });
   };
 
   return (
     <div className="login-page">
+
+      <div className="fixed top-4 right-4 z-[300]">
+        <ThemeToggle />
+      </div>
 
       {/* Card */}
       <div className="login-card">
@@ -132,6 +140,13 @@ const Login = () => {
               ? 'Entering...'
               : 'Enter Experience'}
           </button>
+
+          {/* Forgot password */}
+          <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+            <Link to="/forgot-password">
+              Forgot password?
+            </Link>
+          </div>
 
         </form>
 

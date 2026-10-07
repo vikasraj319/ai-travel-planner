@@ -1,4 +1,4 @@
-function extractTripData(prompt) {
+﻿function extractTripData(prompt) {
 
   const text = prompt.trim();
   const lower = text.toLowerCase();
@@ -26,16 +26,16 @@ function extractTripData(prompt) {
   const budgetPatterns = [
 
     // budget 50000
-    /budget\s*(of)?\s*(₹|rs|rupees|inr|\$|usd|eur|euro)?\s*(\d+)/i,
+    /budget\s*(of)?\s*(Γé╣|rs|rupees|inr|\$|usd|eur|euro)?\s*(\d+)/i,
 
     // under 50000
-    /under\s*(₹|rs|rupees|inr|\$|usd|eur|euro)?\s*(\d+)/i,
+    /under\s*(Γé╣|rs|rupees|inr|\$|usd|eur|euro)?\s*(\d+)/i,
 
     // within 50000
-    /within\s*(₹|rs|rupees|inr|\$|usd|eur|euro)?\s*(\d+)/i,
+    /within\s*(Γé╣|rs|rupees|inr|\$|usd|eur|euro)?\s*(\d+)/i,
 
     // for 50000 rupees
-    /(\d+)\s*(₹|rs|rupees|inr|\$|usd|eur|euro)/i
+    /(\d+)\s*(Γé╣|rs|rupees|inr|\$|usd|eur|euro)/i
   ];
 
   for (const pattern of budgetPatterns) {
