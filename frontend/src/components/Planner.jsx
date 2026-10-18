@@ -70,7 +70,9 @@ const Planner = forwardRef(({ onResult }, ref) => {
 
   function handleSubmit(e) {
     e.preventDefault();
-    sendMessage(buildPrompt());
+    // Pass the structured fields so the backend stores exactly what the user
+    // entered instead of trying (and often failing) to re-parse the prompt.
+    sendMessage(buildPrompt(), formData);
   }
 
   useEffect(() => {
@@ -80,7 +82,7 @@ const Planner = forwardRef(({ onResult }, ref) => {
     });
   }, [messages, loading]);
 
-  async function sendMessage(customText) {
+  async function sendMessage(customText, formFields) {
     const text = customText || input || buildPrompt();
     if (!text.trim() || loading) return;
 
@@ -111,20 +113,37 @@ const Planner = forwardRef(({ onResult }, ref) => {
           content: m.text
         }));
 
+      const payload = {
+        prompt: text,
+        history
+      };
+
+      if (formFields) {
+        payload.destination = formFields.destination || "";
+        payload.duration = formFields.days || "";
+        payload.budget = formFields.budget || "";
+        payload.travelStyle = formFields.style || "";
+      }
+
       const res = await fetch(apiUrl("/api/travel-plan"), {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          prompt: text,
-          history
-        })
+        body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       const parsed = data?.plan;
+
+      if (!res.ok) {
+        throw new Error(data?.message || "The server could not generate an itinerary.");
+      }
 
       if (!parsed) {
         throw new Error("No itinerary returned from server");
+      }
+
+      if (data.saveError) {
+        console.warn("Trip save failed:", data.saveError);
       }
 
       let summary;
@@ -137,23 +156,34 @@ const Planner = forwardRef(({ onResult }, ref) => {
       }
       summary = summary || "Your itinerary is ready.";
 
-      setMessages(prev => [
-        ...prev,
-        {
+      const nextMessages = [{ role: "ai", text: summary }];
+
+      // Never swallow save failures: tell the user the plan was generated but
+      // could not be stored, and why.
+      if (data.saveError) {
+        nextMessages.push({
           role: "ai",
-          text: summary
-        }
-      ]);
+          text: `Your itinerary was generated but could not be saved. ${data.saveError}`
+        });
+      }
+
+      setMessages(prev => [...prev, ...nextMessages]);
 
       onResult?.(parsed);
     } catch (err) {
       console.error(err);
 
+      const isNetworkIssue =
+        !err?.message ||
+        /fetch failed|network|load failed/i.test(err.message);
+
       setMessages(prev => [
         ...prev,
         {
           role: "ai",
-          text: "Something went wrong. Please try again."
+          text: isNetworkIssue
+            ? "Something went wrong. Please try again."
+            : err.message
         }
       ]);
     } finally {

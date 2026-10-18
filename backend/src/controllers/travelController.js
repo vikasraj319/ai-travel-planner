@@ -1,7 +1,13 @@
-const { saveTrip, chatWithPlanner, generateTravelPlan } = require('../services/travelService.js');
+const {
+  saveTrip,
+  chatWithPlanner,
+  generateTravelPlan,
+  resolveSavedTripDetails
+} = require('../services/travelService.js');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTrips } = require("../services/tripService");
 const { ensureProfile } = require("../services/profileService");
+const { validateTrip } = require("../models/tripModel");
 
 const postChat = asyncHandler(async (req, res) => {
   const result = await chatWithPlanner(req.validatedBody);
@@ -17,7 +23,7 @@ const postChat = asyncHandler(async (req, res) => {
       usedFallback: result.usedFallback
     }
   });
-}); 
+});
 
 const postTravelPlan = asyncHandler(async (req, res) => {
 
@@ -31,26 +37,49 @@ const postTravelPlan = asyncHandler(async (req, res) => {
     !Array.isArray(plan);
 
   let savedTripId = null;
+  let saveError = null;
 
   if (req.user && isUsablePlan) {
 
-    const tripData = {
-      destination: result.tripDetails.destination,
-      budget: result.tripDetails.budget,
-      days: result.tripDetails.days,
-      user_id: req.user.id
-    };
+    // The prompt parser is best-effort; prefer parsed values but fall back to
+    // fields the AI returned inside the generated plan.
+    const tripDetails = resolveSavedTripDetails(result.tripDetails, plan);
 
-    // trips.user_id -> profiles.id foreign key requires a profile row
-    await ensureProfile(req.user, req.accessToken);
+    if (!tripDetails.destination) {
+      // Never persist a trip we cannot even attribute to a destination.
+      saveError = 'The itinerary was generated but not saved because no destination could be determined.';
+    } else {
 
-    const savedTrip = await saveTrip(
-      tripData,
-      result.plan,
-      req.accessToken
-    );
+      const tripData = {
+        destination: tripDetails.destination,
+        budget: tripDetails.budget,
+        days: tripDetails.days,
+        user_id: req.user.id
+      };
 
-    savedTripId = savedTrip.id;
+      try {
+        // Never persist incomplete/invalid trips
+        validateTrip(tripData);
+
+        // trips.user_id -> profiles.id foreign key requires a profile row
+        await ensureProfile(req.user, req.accessToken);
+
+        const savedTrip = await saveTrip(
+          tripData,
+          plan,
+          req.accessToken
+        );
+
+        savedTripId = savedTrip?.id ?? null;
+      } catch (err) {
+        // The AI plan itself succeeded; report the save failure without
+        // discarding the generated itinerary.
+        console.error('Trip save failed:', err.message || err);
+        saveError = err.name === 'ApiError'
+          ? err.message
+          : 'The itinerary was generated but could not be saved. Please try again.';
+      }
+    }
   }
 
   res.status(200).json({
@@ -60,7 +89,8 @@ const postTravelPlan = asyncHandler(async (req, res) => {
       source: result.source,
       usedFallback: result.usedFallback
     },
-    savedTripId
+    savedTripId,
+    ...(saveError ? { saveError } : {})
   });
 });
 

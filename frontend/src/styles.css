@@ -821,16 +821,27 @@ button:disabled {
 .floating-field select {
   width: 100%;
   min-width: 0;
+  padding: 0;
   border: 0;
   outline: 0;
   background: transparent;
   color: #526681;
   font-size: 0.83rem;
+  line-height: 1.45;
   font-weight: 700;
 }
 
 .floating-field select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
+  box-sizing: border-box;
+  height: 1.45em;
+  cursor: pointer;
+}
+
+.floating-field select:has(option[value=""]:checked) {
+  color: #71829b;
 }
 
 .floating-field input::placeholder {
@@ -2575,6 +2586,15 @@ footer {
 .dark .floating-field input,
 .dark .floating-field select {
   color: #cbd5e1;
+}
+
+.dark .floating-field select:has(option[value=""]:checked) {
+  color: #64748b;
+}
+
+.dark .floating-field select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
 }
 
 .dark .floating-field input::placeholder {

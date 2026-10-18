@@ -1,10 +1,12 @@
-const { supabase, createSupabaseForToken } = require('../lib/supabase');
+const { createSupabaseForToken } = require('../lib/supabase');
 const { validateTrip, createTripModel } = require('../models/tripModel');
 const { generateText } = require('./aiService');
 const { buildMockReply } = require('./mockTravelService');
 const { CHAT_SYSTEM_PROMPT, PLAN_SYSTEM_PROMPT } = require('../constants/systemPrompts');
 const { normalizeHistory, buildTravelPlanPrompt, normalizeText } = require('../utils/promptBuilder');
-const { extractTripData } = require('../utils/extractTripData');
+const { extractTripData, parseAmount } = require('../utils/extractTripData');
+const { mapSupabaseError } = require('../utils/supabaseErrors');
+const ApiError = require('../utils/ApiError');
 
 async function chatWithPlanner({ message, history = [] }) {
   const messages = [...normalizeHistory(history), { role: 'user', content: message }];
@@ -85,10 +87,61 @@ function extractTripDetails(payload = {}) {
   const durationMatch = normalizeText(payload.duration).match(/(\d+)/);
   const days = durationMatch ? parseInt(durationMatch[1], 10) : parsed.days;
 
-  const budgetMatch = normalizeText(payload.budget).match(/(\d+)/);
-  const budget = budgetMatch
-    ? parseInt(budgetMatch[1], 10)
+  // Prefer the user's explicitly provided budget (any currency formatting).
+  // Never coerce a missing budget to zero.
+  const structuredBudget = parseAmount(normalizeText(payload.budget));
+  const budget = structuredBudget !== null
+    ? structuredBudget
     : (parsed.budget > 0 ? parsed.budget : null);
+
+  return { destination, budget, days };
+}
+
+function isMeaningfulDestination(destination) {
+  if (!destination || typeof destination !== 'string') return false;
+  const cleaned = destination.trim();
+  if (!cleaned) return false;
+  return cleaned.toLowerCase() !== 'unknown';
+}
+
+/**
+ * The prompt parser is best-effort, so fall back to fields the AI included in
+ * the generated plan before deciding the trip is not worth saving.
+ */
+function resolveSavedTripDetails(tripDetails = {}, plan = {}) {
+  const destination = isMeaningfulDestination(tripDetails.destination)
+    ? tripDetails.destination
+    : (normalizeText(plan.destination) || normalizeText(plan.title) || null);
+
+  const planDays = Array.isArray(plan.days)
+    ? plan.days.filter((day) => day && typeof day === 'object').length
+    : 0;
+
+  let days = Number(tripDetails.days);
+  // The parser defaults to 1 day when the request did not mention a duration;
+  // prefer the number of days the AI actually produced in that case.
+  if (!Number.isInteger(days) || days <= 0 || (days === 1 && planDays > 1)) {
+    days = planDays > 0 ? planDays : null;
+  }
+
+  let budget = tripDetails.budget === null || tripDetails.budget === undefined
+    ? null
+    : Number(tripDetails.budget);
+
+  if (!Number.isFinite(budget)) {
+    if (plan.budget && typeof plan.budget === 'object' && !Array.isArray(plan.budget)) {
+      // The AI is asked to emit currency-formatted strings (e.g. "₹5,000"),
+      // so parse each line instead of trusting Number().
+      const total = Object.values(plan.budget).reduce(
+        (sum, value) => sum + (parseAmount(value) || 0),
+        0
+      );
+      budget = total > 0 ? Math.round(total) : null;
+    } else {
+      const parsed = parseAmount(plan.budget);
+      budget = parsed && parsed > 0 ? Math.round(parsed) : null;
+    }
+  }
 
   return { destination, budget, days };
 }
@@ -176,44 +229,52 @@ Days: ${tripDetails.days ?? "Not specified"}
 }
 
 async function saveTrip(data, itinerary, accessToken) {
+  if (!accessToken) {
+    throw new ApiError(401, 'An authenticated session is required to save a trip');
+  }
+
+  if (!itinerary || typeof itinerary !== 'object' || Array.isArray(itinerary)) {
+    throw new ApiError(400, 'Cannot save an invalid travel plan');
+  }
+
+  validateTrip(data);
+
+  const trip = {
+    ...createTripModel(data),
+
+    // The live `trips.itinerary` column is TEXT, so the plan must be stored
+    // as a JSON string. tripService parses it back into an object on read.
+    itinerary: JSON.stringify(itinerary)
+  };
+
+  // Scope the write to the end user's identity so RLS policies apply
+  const client = createSupabaseForToken(accessToken);
+
+  let response;
+
   try {
-    validateTrip(data);
-
-    const trip = {
-      ...createTripModel(data),
-
-      // IMPORTANT:
-      // store plain text, NOT JSON.stringify
-      itinerary
-    };
-
-    // Scope the write to the end user's identity so RLS policies apply
-    const client = accessToken
-      ? createSupabaseForToken(accessToken)
-      : supabase;
-
-    const { data: result, error } = await client
+    response = await client
       .from('trips')
       .insert([trip])
-      .select();
-
-    if (error) {
-      console.error("SUPABASE ERROR:", error);
-      throw error;
-    }
-
-    console.log("Trip saved:", result);
-
-    return result[0];
-
+      .select()
+      .single();
   } catch (err) {
-    console.error("SAVE ERROR:", err);
-    throw err;
+    throw mapSupabaseError(err, 'Failed to save trip');
   }
+
+  if (response.error) {
+    throw mapSupabaseError(response.error, 'Failed to save trip');
+  }
+
+  console.log('Trip saved:', response.data?.id);
+
+  return response.data;
 }
 
 module.exports = {
   chatWithPlanner,
   generateTravelPlan,
   saveTrip,
+  extractTripDetails,
+  resolveSavedTripDetails,
 };

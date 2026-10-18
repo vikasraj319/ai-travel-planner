@@ -9,9 +9,12 @@ export default function SavedTrips() {
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const fetchTrips = useCallback(async () => {
+  const fetchTrips = useCallback(async (signal) => {
     try {
+      setError(null);
+
       const {
       data: { session }
     } = await supabase.auth.getSession();
@@ -28,6 +31,7 @@ export default function SavedTrips() {
     const res = await fetch(
       apiUrl("/api/trips"),
       {
+        signal,
 
         headers: {
           Authorization:
@@ -43,7 +47,14 @@ export default function SavedTrips() {
       return;
     }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Failed to load saved trips"
+        );
+      }
+
       setTrips(
         data.trips ||
         data.data ||
@@ -51,16 +62,23 @@ export default function SavedTrips() {
       );
 
     } catch (err) {
+      if (err.name === "AbortError") return;
       console.error(err);
+      setError(
+        err.message || "Failed to load saved trips"
+      );
+      setTrips([]);
     } finally {
       setLoading(false);
     }
   }, [navigate]);
 
   useEffect(() => {
+    const controller = new AbortController();
 
-    fetchTrips();
+    fetchTrips(controller.signal);
 
+    return () => controller.abort();
   }, [fetchTrips]);
 
   return (
@@ -96,9 +114,20 @@ export default function SavedTrips() {
         )
       }
 
+      {/* ERROR */}
+      {
+        !loading &&
+        error && (
+          <p className="saved-empty">
+            {error}
+          </p>
+        )
+      }
+
       {/* EMPTY */}
       {
         !loading &&
+        !error &&
         trips.length === 0 && (
           <p className="saved-empty">
             No saved trips yet.
