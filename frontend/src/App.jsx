@@ -34,6 +34,8 @@ export default function App() {
   useReveal();
   const plannerRef = useRef();
   const [itinerary, setItinerary] = useState(null);
+  const [tripMeta, setTripMeta] = useState(null);
+  const [mapFocus, setMapFocus] = useState(null);
   const [destinationSearch, setDestinationSearch] = useState("");
 
   useEffect(() => {
@@ -68,6 +70,12 @@ export default function App() {
     plannerRef.current?.sendMessage(text);
   }
 
+  function handlePlannerResult(plan, meta) {
+    setItinerary(plan);
+    setTripMeta(meta || null);
+    setMapFocus(null);
+  }
+
   return (
     <div className="app">
       <Navbar itinerary={itinerary} />
@@ -77,15 +85,22 @@ export default function App() {
       <div id="planner" className="planner-section">
         {/* LEFT */}
         <div className="planner-left">
-          <Planner ref={plannerRef} onResult={setItinerary} />
+          <Planner ref={plannerRef} onResult={handlePlannerResult} />
         </div>
         {/* RIGHT */}
         <div className="planner-right">
-          <Map location={getItineraryLocation(itinerary)} />
+          <Map location={mapFocus?.label || getItineraryLocation(itinerary)} />
         </div>
       </div>
       <Destinations onPlan={handlePlan} searchQuery={destinationSearch} />
-      {itinerary && <Itinerary data={itinerary} onPlan={handlePlan} />}
+      {itinerary && (
+        <Itinerary
+          data={itinerary}
+          onPlan={handlePlan}
+          tripMeta={tripMeta}
+          onFocusPlace={setMapFocus}
+        />
+      )}
       <Testimonials />
       <CTA />
       <ChatWidget />

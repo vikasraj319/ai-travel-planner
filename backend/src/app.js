@@ -8,6 +8,8 @@ const healthRoutes = require('./routes/healthRoutes');
 const travelRoutes = require('./routes/travelRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const imageRoutes = require("./routes/imageRoutes");
+const placesRoutes = require('./routes/placesRoutes');
+const eventsRoutes = require('./routes/eventsRoutes');
 const requestLogger = require('./middleware/requestLogger');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -50,6 +52,18 @@ const chatLimiter = rateLimit({
   }
 });
 
+// Discovery endpoints hit external providers; results are cached server-side.
+const discoveryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many discovery requests. Please try again later.'
+  }
+});
+
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
@@ -67,6 +81,8 @@ app.get('/', (req, res) => {
 
 app.use('/api', healthRoutes);
 app.use('/api/chat', chatLimiter);
+app.use('/api/places', discoveryLimiter, placesRoutes);
+app.use('/api/events', discoveryLimiter, eventsRoutes);
 app.use('/api', travelRoutes);
 app.use('/api', profileRoutes);
 app.use(notFound);

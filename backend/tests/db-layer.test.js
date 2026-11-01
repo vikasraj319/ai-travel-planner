@@ -147,6 +147,23 @@ test('resolveSavedTripDetails keeps parser values when meaningful', () => {
   assert.deepEqual(details, { destination: 'Goa', budget: 50000, days: 3 });
 });
 
+test('extractTripDetails derives start and end dates from the structured start date', () => {
+  const details = extractTripDetails({
+    destination: 'Goa',
+    duration: '4',
+    startDate: '2026-05-01'
+  });
+
+  assert.equal(details.startDate, '2026-05-01');
+  assert.equal(details.endDate, '2026-05-04');
+});
+
+test('extractTripDetails leaves dates null when none can be parsed', () => {
+  const details = extractTripDetails({ destination: 'Goa', duration: '3' });
+  assert.equal(details.startDate, null);
+  assert.equal(details.endDate, null);
+});
+
 test('parseTripRow decodes JSON-string itinerary (TEXT column contract)', () => {
   const plan = { title: 'Goa Escape', days: [{ day: 1 }] };
   const row = parseTripRow({ id: '1', itinerary: JSON.stringify(plan) });

@@ -7,6 +7,32 @@ const { normalizeHistory, buildTravelPlanPrompt, normalizeText } = require('../u
 const { extractTripData, parseAmount } = require('../utils/extractTripData');
 const { mapSupabaseError } = require('../utils/supabaseErrors');
 const ApiError = require('../utils/ApiError');
+const env = require('../config/env');
+
+/**
+ * Turns a provider failure reason into a message the user can act on.
+ * The raw provider error is logged server-side instead of being returned.
+ */
+function describeAiFailure(reason) {
+  switch (reason) {
+    case 'missing_credentials':
+      return 'The AI service is not configured on the server. Please try again later.';
+    case 'invalid_credentials':
+      return 'The AI service rejected the server credentials. Please try again later.';
+    case 'model_unavailable':
+      return 'The AI model is currently unavailable. Please try again in a moment.';
+    case 'rate_limit':
+      return 'The AI service is busy right now. Please try again in a moment.';
+    case 'provider_unavailable':
+      return 'The AI service is temporarily unavailable. Please try again in a moment.';
+    case 'timeout':
+      return 'Generating the itinerary took too long. Please try again with fewer days.';
+    case 'invalid_request':
+      return 'The trip request could not be processed. Please check the details and try again.';
+    default:
+      return 'The AI could not generate an itinerary right now. Please try again.';
+  }
+}
 
 async function chatWithPlanner({ message, history = [] }) {
   const messages = [...normalizeHistory(history), { role: 'user', content: message }];
@@ -94,7 +120,36 @@ function extractTripDetails(payload = {}) {
     ? structuredBudget
     : (parsed.budget > 0 ? parsed.budget : null);
 
-  return { destination, budget, days };
+  const startDate = extractStartDate(payload.startDate, prompt);
+  const endDate = startDate && Number.isInteger(days) && days > 0
+    ? addDaysToDate(startDate, days - 1)
+    : startDate;
+
+  return { destination, budget, days, startDate, endDate };
+}
+
+const DATE_ONLY_REGEX = /\b(\d{4}-\d{2}-\d{2})\b/;
+
+function toValidDateOnly(value) {
+  const match = String(value || '').match(DATE_ONLY_REGEX);
+  if (!match) return null;
+
+  const date = new Date(`${match[1]}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== match[1]) {
+    return null;
+  }
+
+  return match[1];
+}
+
+function extractStartDate(rawStartDate, prompt) {
+  return toValidDateOnly(rawStartDate) || toValidDateOnly(prompt);
+}
+
+function addDaysToDate(dateOnly, days) {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 function isMeaningfulDestination(destination) {
@@ -179,7 +234,10 @@ Days: ${tripDetails.days ?? "Not specified"}
     systemPrompt: PLAN_SYSTEM_PROMPT,
     messages,
     maxTokens: 4000,
-    temperature: 0.7
+    temperature: 0.7,
+    // A full itinerary is a large JSON document and needs a longer deadline
+    // than a chat reply.
+    timeoutMs: env.aiPlanTimeoutMs
   });
 
   if (aiResult.ok && aiResult.text) {
@@ -224,6 +282,8 @@ Days: ${tripDetails.days ?? "Not specified"}
     tripDetails,
     source: "mock",
     usedFallback: true,
+    reason: aiResult.reason,
+    message: describeAiFailure(aiResult.reason),
     error: aiResult.error
   };
 }
@@ -277,4 +337,5 @@ module.exports = {
   saveTrip,
   extractTripDetails,
   resolveSavedTripDetails,
+  describeAiFailure,
 };

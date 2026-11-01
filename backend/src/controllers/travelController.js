@@ -8,6 +8,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { getTrips } = require("../services/tripService");
 const { ensureProfile } = require("../services/profileService");
 const { validateTrip } = require("../models/tripModel");
+const ApiError = require('../utils/ApiError');
 
 const postChat = asyncHandler(async (req, res) => {
   const result = await chatWithPlanner(req.validatedBody);
@@ -36,10 +37,22 @@ const postTravelPlan = asyncHandler(async (req, res) => {
     typeof plan === "object" &&
     !Array.isArray(plan);
 
+  // The AI could not produce an itinerary: report it as a provider failure
+  // instead of answering 200 with an empty plan, so the client can tell the
+  // user what went wrong.
+  if (!isUsablePlan) {
+    console.error('Travel plan generation failed:', result.error || result.reason);
+
+    throw new ApiError(
+      503,
+      result.message || 'The AI could not generate an itinerary right now. Please try again.'
+    );
+  }
+
   let savedTripId = null;
   let saveError = null;
 
-  if (req.user && isUsablePlan) {
+  if (req.user) {
 
     // The prompt parser is best-effort; prefer parsed values but fall back to
     // fields the AI returned inside the generated plan.
@@ -88,6 +101,14 @@ const postTravelPlan = asyncHandler(async (req, res) => {
     meta: {
       source: result.source,
       usedFallback: result.usedFallback
+    },
+    // Additive: lets the client match nearby discovery to the trip's dates.
+    trip: {
+      destination: result.tripDetails?.destination ?? null,
+      days: result.tripDetails?.days ?? null,
+      budget: result.tripDetails?.budget ?? null,
+      startDate: result.tripDetails?.startDate ?? null,
+      endDate: result.tripDetails?.endDate ?? null
     },
     savedTripId,
     ...(saveError ? { saveError } : {})

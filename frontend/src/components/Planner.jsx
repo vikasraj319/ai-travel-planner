@@ -18,7 +18,8 @@ const Planner = forwardRef(({ onResult }, ref) => {
     destination: "",
     days: "",
     budget: "",
-    style: ""
+    style: "",
+    startDate: ""
   });
   const [messages, setMessages] = useState([
     {
@@ -52,7 +53,8 @@ const Planner = forwardRef(({ onResult }, ref) => {
       formData.destination && `Destination: ${formData.destination}`,
       formData.days && `Number of days: ${formData.days}`,
       formData.budget && `Budget: ${formData.budget}`,
-      formData.style && `Travel style: ${formData.style}`
+      formData.style && `Travel style: ${formData.style}`,
+      formData.startDate && `Start date: ${formData.startDate}`
     ].filter(Boolean);
 
     return parts.length
@@ -123,23 +125,40 @@ const Planner = forwardRef(({ onResult }, ref) => {
         payload.duration = formFields.days || "";
         payload.budget = formFields.budget || "";
         payload.travelStyle = formFields.style || "";
+        payload.startDate = formFields.startDate || "";
       }
 
-      const res = await fetch(apiUrl("/api/travel-plan"), {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload)
-      });
+      // The server may spend up to a minute generating a long itinerary, so
+      // the client waits a little longer before giving up.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+      let res;
+      try {
+        res = await fetch(apiUrl("/api/travel-plan"), {
+          method: "POST",
+          headers,
+          signal: controller.signal,
+          body: JSON.stringify(payload)
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       const data = await res.json().catch(() => ({}));
       const parsed = data?.plan;
 
       if (!res.ok) {
-        throw new Error(data?.message || "The server could not generate an itinerary.");
+        throw new Error(
+          data?.message || "The server could not generate an itinerary."
+        );
       }
 
       if (!parsed) {
-        throw new Error("No itinerary returned from server");
+        throw new Error(
+          data?.message ||
+            "The server did not return an itinerary. Please try again."
+        );
       }
 
       if (data.saveError) {
@@ -169,21 +188,27 @@ const Planner = forwardRef(({ onResult }, ref) => {
 
       setMessages(prev => [...prev, ...nextMessages]);
 
-      onResult?.(parsed);
+      onResult?.(parsed, data.trip || null);
     } catch (err) {
       console.error(err);
+
+      const isAbort = err?.name === "AbortError";
 
       const isNetworkIssue =
         !err?.message ||
         /fetch failed|network|load failed/i.test(err.message);
 
+      const text = isAbort
+        ? "Generating the itinerary took too long. Please try again."
+        : isNetworkIssue
+          ? "Something went wrong. Please try again."
+          : err.message;
+
       setMessages(prev => [
         ...prev,
         {
           role: "ai",
-          text: isNetworkIssue
-            ? "Something went wrong. Please try again."
-            : err.message
+          text
         }
       ]);
     } finally {
@@ -247,6 +272,21 @@ const Planner = forwardRef(({ onResult }, ref) => {
                   onChange={handleFieldChange}
                   placeholder="Select days"
                   required
+                />
+              </span>
+              <ChevronDown className="field-chevron" size={17} />
+            </label>
+
+            <label className="floating-field">
+              <span className="field-icon"><CalendarDays size={20} /></span>
+              <span className="field-copy">
+                <span className="field-label">Start Date</span>
+                <input
+                  name="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleFieldChange}
+                  placeholder="Optional"
                 />
               </span>
               <ChevronDown className="field-chevron" size={17} />
