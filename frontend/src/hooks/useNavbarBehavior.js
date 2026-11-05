@@ -1,25 +1,50 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useMotionValue } from "framer-motion";
 
-/** Distance kept above a section when it becomes the active one. */
+import { useCallback, useEffect, useRef, useState } from "react";
+
+
 export const NAV_SCROLL_OFFSET = 120;
 
-/** The navbar is always visible while the page is at (or near) the top. */
+
+// Navbar behavior thresholds
 const TOP_VISIBLE_THRESHOLD = 20;
-/** Beyond this the navbar switches to the floating pill shape. */
 const SCROLLED_THRESHOLD = 40;
-/** Only hide the navbar while scrolling down past this point. */
 const HIDE_THRESHOLD = 120;
-/** Outside clicks are ignored while the page is this close to the top. */
-const OUTSIDE_CLICK_THRESHOLD = 10;
-/** Smallest movement (px) treated as an intentional scroll direction change. */
 const DIRECTION_EPSILON = 2;
 
-/**
- * Document relative offset of an element.
- * `offsetTop` is relative to the nearest positioned ancestor, so the
- * offsetParent chain is walked to get a stable page level value.
- */
+// Prevent scroll events from immediately overriding manual visibility changes.
+const VISIBILITY_LOCK_DURATION = 350;
+
+// Elements that should never trigger navbar visibility toggling.
+const INTERACTIVE_SELECTOR = [
+  "button",
+  "a[href]",
+  "input",
+  "textarea",
+  "select",
+  "option",
+  "label",
+  "summary",
+  "details",
+  "[role='button']",
+  "[role='link']",
+  "[role='menuitem']",
+  "[role='menuitemcheckbox']",
+  "[role='menuitemradio']",
+  "[role='switch']",
+  "[role='checkbox']",
+  "[role='radio']",
+  "[role='tab']",
+  "[role='dialog']",
+  "[role='listbox']",
+  "[role='combobox']",
+  "[role='slider']",
+  "[aria-haspopup]",
+  "[contenteditable='true']",
+  "[data-navbar-ignore]",
+  "[data-navbar-interactive]",
+].join(",");
+
+
 export function getDocumentOffsetTop(element) {
   if (!element) return 0;
 
@@ -37,210 +62,207 @@ export function getDocumentOffsetTop(element) {
 
   return top;
 }
+// Extract a section ID from a navbar link.
+function getSectionId(link) {
+  if (typeof link === "string") {
+    return link.startsWith("#") ? link.slice(1) : link;
+  }
 
-/**
- * Scrolls an element into view keeping `offset` px of breathing room
- * underneath the navbar. Returns false when the element does not exist.
- */
-export function scrollToSectionElement(element, offset = NAV_SCROLL_OFFSET) {
-  if (!element) return false;
+  if (!link || typeof link !== "object") {
+    return null;
+  }
 
-  const top = Math.max(0, getDocumentOffsetTop(element) - offset);
-  window.scrollTo({ top, behavior: "smooth" });
-  return true;
+  const href = link.href || link.to || link.url;
+
+  if (typeof href === "string" && href.includes("#")) {
+    return href.split("#").pop() || null;
+  }
+
+  return link.id || link.sectionId || link.section || null;
 }
 
-/**
- * Width of the fixed positioning context (the viewport without the
- * scrollbar). Used to size the navbar exactly and keep it centred.
- */
-function getViewportWidth() {
-  if (typeof document === "undefined") return 1280;
-  return document.documentElement.clientWidth;
-}
-
-/**
- * Single source of truth for the navbar behaviour:
- * - visibility (hide on scroll down, reveal on scroll up)
- * - floating pill morph state
- * - mobile menu open/close
- * - active section (scroll spy)
- * - click outside toggle
- */
 export default function useNavbarBehavior(navbarRef, links = []) {
   const [showNavbar, setShowNavbar] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [active, setActive] = useState(links[0]?.id ?? "");
-  const [viewportWidth, setViewportWidth] = useState(getViewportWidth);
-
-  const scrollProgress = useMotionValue(0);
-
-  const lastScrollYRef = useRef(0);
-  const activeRef = useRef(active);
-  const linksRef = useRef(links);
-  const lockUntilRef = useRef(0);
-  const viewportWidthRef = useRef(viewportWidth);
-
-  // Keep the latest link list available to the scroll spy without making
-  // the scroll handler depend on it.
-  useEffect(() => {
-    linksRef.current = links;
-  }, [links]);
-
-  // The scrollbar can appear/disappear while the page grows, so the
-  // viewport width is re-synced on every scroll frame and on resize.
-  const syncViewportWidth = useCallback(() => {
-    const next = getViewportWidth();
-    if (next !== viewportWidthRef.current) {
-      viewportWidthRef.current = next;
-      setViewportWidth(next);
-    }
-  }, []);
-
-  const setActiveSection = useCallback((id) => {
-    if (!id || activeRef.current === id) return;
-    activeRef.current = id;
-    setActive(id);
-  }, []);
-
-  // Scroll spy: section.offsetTop - 120 .. + section.clientHeight
-  const detectActiveSection = useCallback(
-    (scrollY) => {
-      for (const link of linksRef.current) {
-        const element = document.getElementById(link.id);
-        if (!element) continue;
-
-        const start = getDocumentOffsetTop(element) - NAV_SCROLL_OFFSET;
-        const end = start + element.clientHeight;
-
-        if (scrollY >= start && scrollY < end) {
-          setActiveSection(link.id);
-          return;
-        }
-      }
-
-      // No section matched. The final section can be shorter than the
-      // viewport, which leaves the maximum scroll position outside of its
-      // range, so the last link takes over at the very bottom of the page.
-      const doc = document.documentElement;
-      if (
-        scrollY > 0 &&
-        scrollY + window.innerHeight >= doc.scrollHeight - 2 &&
-        linksRef.current.length
-      ) {
-        const last = linksRef.current[linksRef.current.length - 1];
-        setActiveSection(last.id);
-      }
-    },
-    [setActiveSection]
+  const [active, setActive] = useState("");
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
   );
 
-  // Coordinated scroll handler: visibility + morph + menu + scroll spy.
+  const lastScrollYRef = useRef(0);
+  const lockUntilRef = useRef(0);
+  const animationFrameRef = useRef(null);
+
+  // Manually reveal the navbar and temporarily protect it
+  // from being hidden by an immediate scroll event.
+  const revealNavbar = useCallback(() => {
+    setShowNavbar(true);
+    lockUntilRef.current = Date.now() + VISIBILITY_LOCK_DURATION;
+  }, []);
+
+  // Handle page scrolling.
   useEffect(() => {
     let ticking = false;
 
-    function update() {
-      const currentY = window.scrollY;
-      const delta = currentY - lastScrollYRef.current;
+    function updateScroll() {
+      const currentY = Math.max(0, window.scrollY);
+      const previousY = lastScrollYRef.current;
+      const delta = currentY - previousY;
 
-      // A. Always visible at the top of the page.
+      // Update scroll-related states.
+      setScrolled(currentY > SCROLLED_THRESHOLD);
+
+      const documentHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+
+      const progress =
+        documentHeight > 0 ? (currentY / documentHeight) * 100 : 0;
+
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
+
+      // Always show navbar at the top of the page.
       if (currentY <= TOP_VISIBLE_THRESHOLD) {
         setShowNavbar(true);
-      } else if (delta > DIRECTION_EPSILON) {
-        // B. Hide while scrolling down (only past the hide threshold).
+      }
+      // Scrolling down hides the navbar after the threshold.
+      else if (delta > DIRECTION_EPSILON) {
         if (
           currentY > HIDE_THRESHOLD &&
           Date.now() >= lockUntilRef.current
         ) {
           setShowNavbar(false);
+          setMenuOpen(false);
         }
-      } else if (delta < -DIRECTION_EPSILON) {
-        // C. Reveal immediately when the direction flips to up.
-        setShowNavbar(true);
       }
-
-      // D. Floating pill threshold (independent from visibility).
-      setScrolled(currentY > SCROLLED_THRESHOLD);
-
-      // E. The mobile menu always collapses while scrolling.
-      setMenuOpen(false);
-
-      // Scroll spy for the active navigation item.
-      detectActiveSection(currentY);
-
-      // Keep the navbar width in sync with the viewport.
-      syncViewportWidth();
-
-      // Scroll progress is written to a motion value so the page does not
-      // re-render on every scroll frame.
-      const docHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight > 0) {
-        scrollProgress.set(
-          Math.min(100, Math.max(0, (currentY / docHeight) * 100))
-        );
+      // Scrolling up reveals the navbar immediately.
+      else if (delta < -DIRECTION_EPSILON) {
+        setShowNavbar(true);
       }
 
       lastScrollYRef.current = currentY;
       ticking = false;
     }
 
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(update);
+    function handleScroll() {
+      if (!ticking) {
+        animationFrameRef.current = window.requestAnimationFrame(
+          updateScroll
+        );
+        ticking = true;
+      }
     }
 
     lastScrollYRef.current = window.scrollY;
-    window.addEventListener("scroll", onScroll, { passive: true });
-    update();
+
+    updateScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", handleScroll);
+
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, [detectActiveSection, scrollProgress, syncViewportWidth]);
+  }, []);
 
-  // Re-sync the viewport width when the window is resized.
+  // Toggle navbar visibility when clicking non-interactive areas.
   useEffect(() => {
-    window.addEventListener("resize", syncViewportWidth);
-    return () => {
-      window.removeEventListener("resize", syncViewportWidth);
-    };
-  }, [syncViewportWidth]);
+    function handleDocumentClick(event) {
+      if (event.defaultPrevented) return;
 
-  // Click outside toggles the navbar (ignored at the top of the page).
-  useEffect(() => {
-    function handleWindowClick(event) {
-      if (window.scrollY <= OUTSIDE_CLICK_THRESHOLD) return;
+      const target = event.target;
 
-      const node = navbarRef.current;
-      if (node && node.contains(event.target)) return;
+      if (!(target instanceof Element)) return;
 
-      setShowNavbar((prev) => {
-        // The navbar is always visible at the top of the page, so an
-        // outside click may never leave it hidden there.
-        if (window.scrollY <= TOP_VISIBLE_THRESHOLD) return true;
-        return !prev;
-      });
+      // Ignore all standard and explicitly marked interactive elements.
+      if (target.closest(INTERACTIVE_SELECTOR)) return;
+
+      // Ignore interactions inside the navbar's mobile menu when
+      // the menu container has been explicitly marked interactive.
+      // Navbar controls are already excluded by the selector above.
+
+      if (window.scrollY <= TOP_VISIBLE_THRESHOLD) {
+        setShowNavbar(true);
+        return;
+      }
+
+      // Toggle visibility for ordinary screen areas.
+      setShowNavbar((previous) => !previous);
+
+      // Close an open mobile menu when the user taps empty space.
       setMenuOpen(false);
+
+      // Avoid an immediate scroll event overriding the manual toggle.
+      lockUntilRef.current = Date.now() + VISIBILITY_LOCK_DURATION;
     }
 
-    window.addEventListener("click", handleWindowClick);
-    return () => {
-      window.removeEventListener("click", handleWindowClick);
-    };
-  }, [navbarRef]);
+    document.addEventListener("click", handleDocumentClick);
 
-  /**
-   * Forces the navbar visible. `lockMs` keeps it visible for a short
-   * period (used right after a navigation click so the smooth scroll
-   * does not immediately hide it again).
-   */
-  const revealNavbar = useCallback((lockMs = 0) => {
-    if (lockMs > 0) lockUntilRef.current = Date.now() + lockMs;
-    setShowNavbar(true);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick);
+    };
   }, []);
+
+  // Update viewport width and close mobile menu when resizing.
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth);
+
+      if (window.innerWidth > 768) {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // Detect the currently visible page section.
+  useEffect(() => {
+    if (!links.length) return;
+
+    function updateActiveSection() {
+      const sections = links
+        .map((link) => {
+          const id = getSectionId(link);
+          const element = id ? document.getElementById(id) : null;
+
+          return element ? { id, element } : null;
+        })
+        .filter(Boolean);
+
+      if (!sections.length) return;
+
+      let currentSection = sections[0].id;
+
+      for (const section of sections) {
+        const top = section.element.getBoundingClientRect().top;
+
+        if (top <= 120) {
+          currentSection = section.id;
+        }
+      }
+
+      setActive(currentSection);
+    }
+
+    updateActiveSection();
+
+    window.addEventListener("scroll", updateActiveSection, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+    };
+  }, [links]);
 
   return {
     showNavbar,
@@ -248,9 +270,9 @@ export default function useNavbarBehavior(navbarRef, links = []) {
     menuOpen,
     setMenuOpen,
     active,
-    setActive: setActiveSection,
+    setActive,
     revealNavbar,
     scrollProgress,
-    viewportWidth
+    viewportWidth,
   };
 }

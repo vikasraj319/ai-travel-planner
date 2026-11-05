@@ -90,23 +90,23 @@ export default function Hero({ onStart }) {
         >
           <div className="hero-image-card">
             <img
-              src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1100&q=85"
+              src="images/travel.jpeg"
               alt="A bright scenic travel destination"
               onError={(e) => handleImageError(e, FALLBACK_IMAGES.destination)}
             />
           </div>
-
+{/* 
           <div className="floating-card ai-card">
             <span>AI Recommendation</span>
             <strong>Best time to visit</strong>
             <p>April - June</p>
-          </div>
+          </div> */}
 
           <div className="floating-card route-card">
-            <MapPin size={18} />
+            {/* <MapPin size={18} /> */}
             <div>
-              <strong>Balanced route</strong>
-              <p>Food, culture, hidden gems</p>
+              {/* <strong>Balanced route</strong> */}
+              <p>The world is waiting. Go find your horizon.</p>
             </div>
           </div>
         </MotionDiv>
